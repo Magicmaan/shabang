@@ -79,6 +79,7 @@ const Result = ({
                 ref={ref}
                 onPointerDown={(e) => {
                     if (!data?.path) return
+                    if (e.button !== 0) return
                     open(data?.path, false)
                     e.currentTarget.focus()
                 }}
@@ -93,13 +94,16 @@ const Result = ({
                 </div>
                 <div
                     className="flex h-auto w-full flex-col overflow-hidden text-wrap"
-                    title={'test'}
+                    title={mainText}
                 >
                     <p className="text-primary fade-text-right text-nowrap">
                         {mainText}
                     </p>
 
-                    <div className="flex w-auto max-w-full flex-row gap-2 pl-2">
+                    <div
+                        className="flex w-auto max-w-full flex-row gap-2 pl-2"
+                        title={subText}
+                    >
                         <p className="text-secondary fade-text-right w-full text-xs text-nowrap">
                             {subText}
                         </p>
@@ -156,12 +160,13 @@ export const SettingResult = ({
     selected,
     key,
 }: {
-    result: ApplicationResult
+    result: ControlPanelResult
     selected: number
     key: number
 }) => {
     return (
         <Result
+            data-slot="context-menu-trigger"
             key={key}
             selected={selected}
             mainText={result.readable_name}

@@ -28,6 +28,7 @@ import {
 import { Frown } from 'lucide-react'
 import { e } from 'mathjs'
 import { listen } from '@tauri-apps/api/event'
+import { ContextMenu, ContextMenuProvider } from './ContextMenu'
 
 const ResultsPlaceholder = ({ active }: { active: boolean }) => {
     return (
@@ -173,9 +174,9 @@ const ResultsContainer = () => {
 
     const mergedFormattedResults = useMemo(() => {
         return [
-            ...(formattedResults.settings || []),
-            ...(formattedResults.apps || []),
-            ...(formattedResults.files || []),
+            ...(formattedResults?.settings || []),
+            ...(formattedResults?.apps || []),
+            ...(formattedResults?.files || []),
         ]
     }, [formattedResults])
 
@@ -218,67 +219,78 @@ const ResultsContainer = () => {
     }, [isSearching, mergedFormattedResults, isError])
 
     return (
-        <Panel
-            ref={ref}
-            data-error={isError}
-            className={`flex ${maxHeight} transition-height h-auto w-auto flex-col gap-1 overflow-hidden transition-all duration-500 ease-in-out`}
-        >
-            {/* <SettingBar /> */}
+        <ContextMenuProvider>
+            <Panel
+                ref={ref}
+                data-error={isError}
+                className={`flex ${maxHeight} transition-height h-auto w-auto flex-col gap-1 overflow-hidden transition-all duration-500 ease-in-out`}
+            >
+                {/* <SettingBar /> */}
 
-            <Tabs defaultValue="*" className="h-full w-full overflow-hidden">
-                <TabList>
-                    <TabTriggers value="*">
-                        <p className="text-text">*</p>
+                <Tabs
+                    defaultValue="*"
+                    className="h-full w-full overflow-hidden"
+                >
+                    <TabList>
+                        <TabTriggers value="*">
+                            <p className="text-text">*</p>
 
-                        <div className="center mr-1 aspect-square h-9/10 rounded-full bg-white/10 text-xs">
-                            {resultsAmounts.all}
-                        </div>
-                    </TabTriggers>
-                    <TabTriggers value="files">
-                        <p className="text-text">Files</p>
+                            <div className="center mr-1 aspect-square h-9/10 rounded-full bg-white/10 text-xs">
+                                {resultsAmounts.all}
+                            </div>
+                        </TabTriggers>
+                        <TabTriggers value="files">
+                            <p className="text-text">Files</p>
 
-                        <div className="center mr-1 aspect-square h-9/10 rounded-full bg-white/10 text-xs">
-                            {resultsAmounts.files}
-                        </div>
-                    </TabTriggers>
-                    <TabTriggers value="apps">
-                        <p className="text-text">Apps</p>
+                            <div className="center mr-1 aspect-square h-9/10 rounded-full bg-white/10 text-xs">
+                                {resultsAmounts.files}
+                            </div>
+                        </TabTriggers>
+                        <TabTriggers value="apps">
+                            <p className="text-text">Apps</p>
 
-                        <div className="center mr-1 aspect-square h-9/10 rounded-full bg-white/10 text-xs">
-                            {resultsAmounts.apps}
-                        </div>
-                    </TabTriggers>
-                    <TabTriggers value="settings">
-                        <p className="text-text">Settings</p>
+                            <div className="center mr-1 aspect-square h-9/10 rounded-full bg-white/10 text-xs">
+                                {resultsAmounts.apps}
+                            </div>
+                            <ContextMenu title="Apps" />
+                        </TabTriggers>
+                        <TabTriggers value="settings">
+                            <p className="text-text">Settings</p>
 
-                        <div className="center mr-1 aspect-square h-9/10 rounded-full bg-white/10 text-xs">
-                            {resultsAmounts.settings}
-                        </div>
-                    </TabTriggers>
-                </TabList>
-                <TabContent value="*">
-                    {isError && !isSearching ? (
-                        <ResultsError
-                            error={error.current as EverythingError}
-                        />
-                    ) : null}
-                    <ResultsPlaceholder active={isSearching} />
-                    <ul
-                        ref={listRef}
-                        aria-hidden={isSearching}
-                        aria-disabled={isSearching}
-                        className={`h-auto transition-all duration-500 ease-in-out aria-hidden:opacity-0`}
-                    >
-                        {mergedFormattedResults}
-                    </ul>
-                </TabContent>
-                <TabContent value="files">{formattedResults.files}</TabContent>
-                <TabContent value="apps">{formattedResults.apps}</TabContent>
-                <TabContent value="settings">
-                    {formattedResults.settings}
-                </TabContent>
-            </Tabs>
-        </Panel>
+                            <div className="center mr-1 aspect-square h-9/10 rounded-full bg-white/10 text-xs">
+                                {resultsAmounts.settings}
+                            </div>
+                            <ContextMenu title="Settings" />
+                        </TabTriggers>
+                    </TabList>
+                    <TabContent value="*">
+                        {isError && !isSearching ? (
+                            <ResultsError
+                                error={error.current as EverythingError}
+                            />
+                        ) : null}
+                        <ResultsPlaceholder active={isSearching} />
+                        <ul
+                            ref={listRef}
+                            aria-hidden={isSearching}
+                            aria-disabled={isSearching}
+                            className={`h-auto transition-all duration-500 ease-in-out aria-hidden:opacity-0`}
+                        >
+                            {mergedFormattedResults}
+                        </ul>
+                    </TabContent>
+                    <TabContent value="files">
+                        {formattedResults?.files}
+                    </TabContent>
+                    <TabContent value="apps">
+                        {formattedResults?.apps}
+                    </TabContent>
+                    <TabContent value="settings">
+                        {formattedResults?.settings}
+                    </TabContent>
+                </Tabs>
+            </Panel>
+        </ContextMenuProvider>
     )
 }
 
