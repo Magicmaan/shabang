@@ -3,7 +3,7 @@ import { useCallback } from "react";
 
 interface UseSpecialCharactersProps {
 	searchQuery: string;
-	setSearchQuery: (query: string) => void;
+	setSearchQuery: (query: string | ((prev: string) => string)) => void;
 	searchHighlightRange: React.MutableRefObject<[number, number]>;
 	doUpdateSearchHighlightRange: React.MutableRefObject<boolean>;
 }
@@ -20,19 +20,6 @@ export const useSpecialCharacters = ({
 			searchHighlightRange.current[1]
 		);
 	}, [searchQuery, searchHighlightRange]);
-
-	const insertSurroundingCharacter = useCallback(
-		(character: string) => {
-			let highlightedText = getHighlightedText();
-			setSearchQuery((prev) => {
-				return prev.replace(
-					highlightedText,
-					`${character}${highlightedText}${character}`
-				);
-			});
-		},
-		[searchQuery, searchHighlightRange]
-	);
 
 	const onParentheses = useCallback(() => {
 		// so if parentheses etc are added, it will be added to the search query

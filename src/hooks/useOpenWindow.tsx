@@ -1,38 +1,52 @@
-import { listen } from "@tauri-apps/api/event";
-import { debug } from "@tauri-apps/plugin-log";
-import { useRef, useState } from "react";
+import { invoke } from '@tauri-apps/api/core'
+import { listen } from '@tauri-apps/api/event'
+import { debug } from '@tauri-apps/plugin-log'
+import { useEffect, useReducer, useRef, useState } from 'react'
+
+interface State {
+    state: 'opening' | 'closing' | 'open' | 'closed'
+}
 
 // listens for open_window and close_window events
 export const useOpenWindow = () => {
-	const [windowIsOpen, setWindowIsOpen] = useState(false);
-	const throttle = useRef(false);
-	const throttleWait = 100; // 1 second
+    const [windowOpenState, _setWindowOpenState] = useState<
+        'open' | 'closed' | 'closing' | 'opening'
+    >('closed')
 
-	listen("open_window", (event) => {
-		// if  throttled, ignore
-		if (throttle.current) return;
-		throttle.current = true;
-		//set state
-		console.log(event);
-		debug("Opening Window");
+    // wrapper so that setting outside of this hook is not possible
+    const setWindowOpenState = (state: 'open' | 'closed') => {
+        if (state === 'open') {
+            invoke('open_window')
+        } else {
+            invoke('close_window')
+        }
+    }
 
-		// set throttle to throttleWait ms
-		setTimeout(() => {
-			throttle.current = false;
-		}, throttleWait);
-		setWindowIsOpen(true);
-	});
-	listen("close_window", (event) => {
-		if (throttle.current) return;
-		throttle.current = true;
-		debug("Closing Window");
+    // useEffect to mount / unmount
+    useEffect(() => {
+        // uses events to set the window state
+        // transition -> just started opening or closing
+        // transition_done -> done opening or closing
+        const ot = listen('open_window_transition', (event) => {
+            _setWindowOpenState('opening')
+        })
+        const ct = listen('close_window_transition', () => {
+            _setWindowOpenState('closing')
+        })
+        const otd = listen('open_window_transition_done', () => {
+            _setWindowOpenState('open')
+        })
+        const ctd = listen('close_window_transition_done', () => {
+            _setWindowOpenState('closed')
+        })
 
-		// set throttle to throttleWait ms
-		setTimeout(() => {
-			throttle.current = false;
-		}, throttleWait);
-		setWindowIsOpen(false);
-	});
-
-	return windowIsOpen;
-};
+        return () => {
+            //unlisten events on unmount
+            ot.then((e) => e())
+            ct.then((e) => e())
+            otd.then((e) => e())
+            ctd.then((e) => e())
+        }
+    }, [])
+    return { windowOpenState, setWindowOpenState }
+}

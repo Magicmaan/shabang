@@ -116,26 +116,27 @@ button {
 .shiny {
 	position: relative;
 	border: 0.25rem solid transparent;
+	overflow: hidden; /* Prevent overflow */
 }
 .shiny:hover::after {
 	opacity: 0.25;
 	background: radial-gradient(white, #3984ff00 70%);
+	transition:
+		opacity 0.3s ease,
+		background 0.3s ease; /* Add transition for smoother effect */
 }
 .shiny::after {
 	content: "";
 	position: absolute;
-
-	padding: 50px;
-	transform-origin: center;
+	top: 50%;
+	left: 50%;
 	transform: translate(-50%, -50%);
-	top: calc(var(--shiny-y, 0));
-	left: calc(var(--shiny-x, 0));
-	width: var(--shiny-size);
-	height: var(--shiny-size);
-
-	opacity: 0.1;
+	width: 200%;
+	height: 200%;
 	background: radial-gradient(var(--color-glow), #3984ff00 70%);
+	opacity: 0.1;
 	pointer-events: none;
+	transition: opacity 0.3s ease; /* Add transition for smoother effect */
 }
 .shiny-border::before {
 	content: "";
@@ -146,7 +147,6 @@ button {
 	bottom: 0;
 	z-index: -1;
 	background-color: transparent;
-
 	border: 2px solid var(--color-shadow);
 	border-radius: inherit;
 	pointer-events: none;
@@ -162,4 +162,11 @@ button {
 	background-color: var(--color-secondary);
 	width: 50px;
 	border-radius: 100vh;
+}
+
+.equation-list {
+}
+
+.previous-equation:not(:first-of-type) {
+	scale: 0.9;
 }

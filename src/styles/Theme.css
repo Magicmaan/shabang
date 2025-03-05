@@ -1,72 +1,98 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
-	/* light theme */
-	--color-primary: #dededb;
-	--color-secondary: #bfbfbc;
-	--color-accent: #71b2ee;
-	--color-border: #fafafa;
-	--color-text: #0f0f0f;
-	--color-text-secondary: #535353;
-	--color-text-tertiary: #8c8c8c;
+    /* light theme */
+    --color-primary: #dededb;
+    --color-secondary: #bfbfbc;
+    --color-accent: #71b2ee;
+    --color-border: #fafafa;
+    --color-text: #0f0f0f;
+    --color-text-secondary: #535353;
+    --color-text-tertiary: #8c8c8c;
 
-	--color-shadow: hsla(0, 0%, 0%, 0.15);
-	--color-glow: hsla(0, 0%, 100%, 0.25);
+    --color-shadow: hsla(0, 0%, 0%, 0.15);
+    --color-glow: hsla(0, 0%, 100%, 0.25);
 
-	--color-selected: #7aa7d9;
-	--color-hover: #bfd3eb;
-	--color-selected-text: #ffffff;
+    --color-selected: #7aa7d9;
+    --color-hover: #bfd3eb;
+    --color-selected-text: #ffffff;
+
+    --animate-pulse: pulse 10s cubic-bezier(0.1, 0.4, 0.6, 1) infinite;
 }
 
 .dark {
-	--color-selected: #496f9b;
-	--color-primary: #1a1a1a;
-	--color-secondary: #535252;
-	--color-accent: #71b2ee;
-	--color-border: #181818;
-	--color-text: #c9c9c9;
-	--color-text-secondary: #acacac;
-	--color-text-tertiary: #b3b3b3;
-	--color-shadow: hsla(0, 0%, 100%, 0.0625);
-	--color-glow: hsla(0, 0%, 100%, 0.25);
-	--color-hover: #44576d;
+    --color-selected: #496f9b;
+    --color-primary: #1a1a1a;
+    --color-secondary: #535252;
+    --color-accent: #71b2ee;
+    --color-border: #181818;
+    --color-text: #c9c9c9;
+    --color-text-secondary: #acacac;
+    --color-text-tertiary: #b3b3b3;
+    --color-shadow: hsla(0, 0%, 100%, 0.0625);
+    --color-glow: hsla(0, 0%, 100%, 0.25);
+    --color-hover: #44576d;
 }
 .drop-shadow {
-	filter: drop-shadow(0 0 0.5em var(--color-shadow));
+    filter: drop-shadow(0 0 0.5em var(--color-shadow));
 }
 
 .text-primary {
-	@apply text-text;
+    @apply text-text;
 }
 .text-secondary {
-	@apply text-text-secondary;
+    @apply text-text-secondary;
 }
 .fade-text-right {
-	--fade-start: 90%;
-	mask-image: linear-gradient(to right, white var(--fade-start), transparent);
+    --fade-start: 90%;
+    mask-image: linear-gradient(to right, white var(--fade-start), transparent);
 }
 
 @keyframes fadeIn {
-	from {
-		opacity: 0;
-	}
-	to {
-		opacity: 1;
-	}
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }
 
 @keyframes fadeInBorder {
-	from {
-		border-image-width: 0;
-	}
-	to {
-		border-image-width: 2;
-	}
+    from {
+        border-image-width: 0;
+    }
+    to {
+        border-image-width: 2;
+    }
 }
 
 .rainbow-border {
-	border-image: url(./RainbowBorder.svg) 30;
-	animation: fadeInBorder 2s cubic-bezier(0.32, 0, 0.67, 0);
+    border-image: url(./RainbowBorder.svg) 30;
+    animation: fadeInBorder 0.5s cubic-bezier(0.32, 0, 0.67, 0);
+}
+
+.tab-break {
+    background-color: red;
+    width: 10px;
+    height: 100%;
+}
+
+@keyframes searchFadeIn {
+    from {
+        transform: translate(0, -50px);
+        rotate: 45deg;
+        opacity: 0;
+        background-color: red;
+    }
+    to {
+        transform: translate(0, 0);
+        rotate: 0deg;
+        opacity: 1;
+    }
+}
+.fade-in {
+    animation: searchFadeIn 10s cubic-bezier(0.32, 0, 0.67, 0) forwards;
+    transition: all;
 }
 
 @custom-variant dark (&:where(.dark, .dark *));

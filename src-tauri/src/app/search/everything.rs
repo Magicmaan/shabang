@@ -1,13 +1,21 @@
-use std::sync::MutexGuard;
+use std::sync::{MutexGuard, TryLockError};
 
 use everything_sdk::*;
 
+use crate::app::types::search::EverythingResult;
+
 fn get_everything() -> MutexGuard<'static, EverythingGlobal> {
-    let mut everything = match global().try_lock() {
-        Ok(lock) => lock,
-        Err(_) => panic!("Failed to acquire lock on Everything instance"),
-    };
-    everything
+    let mut retries = 5;
+    loop {
+        match global().try_lock() {
+            Ok(lock) => return lock,
+            Err(TryLockError::WouldBlock) if retries > 0 => {
+                retries -= 1;
+                std::thread::sleep(std::time::Duration::from_millis(100));
+            }
+            Err(_) => println!("Failed to acquire lock on Everything instance after multiple attempts"),
+        }
+    }
 }
 
 fn set_search(query: String, searcher: &mut EverythingSearcher) {
@@ -26,7 +34,7 @@ fn set_search(query: String, searcher: &mut EverythingSearcher) {
 }
 
 
-pub fn search(query: String) -> Vec<String> {
+pub fn search(query: String) -> std::result::Result<Vec<EverythingResult>, EverythingError> {
     // At first, we should clearly understand that Everything-SDK IPC code is
     // based on **global mutable static variables** (the internal state is
     // stored in them), at least that's the case for now.
@@ -36,11 +44,12 @@ pub fn search(query: String) -> Vec<String> {
 
     // So we need and can only do the query serially via global states.
     let mut everything = get_everything();
-    let mut results_vec = Vec::new();
+    let mut results_vec: Vec<EverythingResult> = Vec::new();
+
     // Check whether the Everything.exe in the background is running.
     match everything.is_db_loaded() {
-        Ok(false) => panic!("The Everything database has not been fully loaded now."),
-        Err(EverythingError::Ipc) => panic!("Everything is required to run in the background."),
+        Ok(false) => {return Err(EverythingError::InvalidCall);},
+        Err(EverythingError::Ipc) => {return Err(EverythingError::Ipc);},
         _ => {
             // Now _Everything_ is OK!
             // We got the searcher, which can be reused for multiple times queries and cleans up
@@ -76,14 +85,16 @@ pub fn search(query: String) -> Vec<String> {
                 let _file_name = item.filename().unwrap();
                 let _size = item.size().unwrap();
                 
-                results_vec.push(full_path.to_string_lossy().to_string());
-                println!(
-                    "Item[{}]: {} ({} bytes)",
-                    item.index(),
-                    full_path.display(),
-                    // We have set the `RequestFlags::EVERYTHING_REQUEST_SIZE` for it before.
-                    item.size().unwrap(),
+                // add to results
+                results_vec.push(EverythingResult{
+                    readable_name: _file_name.to_string_lossy().to_string(),
+                    name: full_path.to_string_lossy().to_string(),
+                    path: full_path.to_string_lossy().to_string(),
+                    category: "Everything".to_string(),
+                }
+                
                 );
+               
             }
 
             // Or you are only interested in the run count of the 3rd result in Everything Run History.
@@ -110,5 +121,7 @@ pub fn search(query: String) -> Vec<String> {
         .is_appdata()
         .unwrap();
 
-    return results_vec;
+    
+    Ok(results_vec)
+
 }

@@ -10,7 +10,7 @@ const Panel: React.FC<PanelProps & React.RefAttributes<HTMLDivElement>> =
 				className={`bg-primary w-full flex  
 							justify-start min-w-12 items-center 
 							rounded-md p-1 border-2 border-border 
-							drop-shadow scrollbar ${className} 
+							drop-shadow scrollbar text-text ${className} 
 							`}
 				{...props}>
 				{children}

@@ -1,6 +1,6 @@
 mod app;
 
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use tauri::Manager;
 use std::{thread, time};
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
@@ -8,46 +8,37 @@ use tauri::{AppHandle, Emitter};
 use tauri_plugin_global_shortcut::{Code, Modifiers, Shortcut, ShortcutState};
 
 use app::shortcut::make_shortcut;
-use app::api::javascript::{open_window_js, greet, close_window_js, close_window, open_window, search_everything_js, open_link_js};
+use app::api::javascript::{open_window,search_js, get_blur_js, close_window, open_link_js, set_blur_js};
+use window_vibrancy::{apply_blur, apply_vibrancy, NSVisualEffectMaterial};
 
-// #[tauri::command]
-// fn greet(name: &str) -> String {
-//     format!("Hello, {}! You've been greeted from Rust!", name)
-// }
+// Define BlurStyle type
+pub enum BlurStyle {
+    Blur,
+    Vibrancy,
+    Acrylic,
+}
 
-// #[tauri::command]
-// fn send_event(app: AppHandle, _event: String) {
-//     app.emit("test", "hi").unwrap();
-// }
+// Implement Default trait for BlurStyle
+impl Default for BlurStyle {
+    fn default() -> Self {
+        BlurStyle::Acrylic
+    }
+}
 
-// #[tauri::command]
-// async fn open_window_js(webview_window: tauri::WebviewWindow, app_handle: tauri::AppHandle) {
-//     webview_window.show().unwrap();
-//     webview_window.set_focus().unwrap();
+#[derive(Default)]
+pub struct AppState {
+    use_blur: bool,
+    blur_style: BlurStyle,
+    blur_colour: Option<(u8, u8, u8, u8)>,
+}
 
-//     open_window(app_handle.clone());
-// }
-
-// #[tauri::command]
-// fn close_window_js(webview_window: tauri::WebviewWindow, app_handle: tauri::AppHandle) {
-//     close_window(app_handle.clone());
-                                            
-//     let window_clone = webview_window.clone();
-//     tauri::async_runtime::spawn(async move {
-//         thread::sleep(time::Duration::from_millis(500));
-//         window_clone.hide().unwrap();
-//     });
-// }
-
-
-// fn open_window(app: AppHandle) {
-//     app.emit("open_window", "").unwrap();
-// }
-// fn close_window(app: AppHandle) {
-//     app.emit("close_window", "").unwrap();
-// }
-
-
+fn default_state() -> AppState {
+    AppState {
+        use_blur: true,
+        blur_style: BlurStyle::Acrylic,
+        blur_colour: Some((18, 18, 18, 125)),
+    }
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -59,9 +50,16 @@ pub fn run() {
             {
                 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
                 use tauri::tray::TrayIconBuilder;
-
                 let window = app.get_webview_window("main").unwrap();
-                
+
+                //create state
+                app.manage(Mutex::new(AppState::default()));
+
+                //to use:
+                // let state = app.state::<Mutex<AppState>>();
+                // let mut state = state.lock().unwrap();
+                // state.use_blur = true;
+
                 let shortcuts = app::settings::shortcuts::Shortcuts::new();
                 // create open / close shortcut
                 match make_shortcut(
@@ -72,19 +70,14 @@ pub fn run() {
                         let window = window.clone();
                         move || {
                             if window.is_visible().unwrap() {
-                                close_window(handler.clone());
+                                close_window(window.clone(),handler.clone() );
                                 
-                                let window_clone = window.clone();
-                                tauri::async_runtime::spawn(async move {
-                                    thread::sleep(time::Duration::from_millis(500));
-                                    window_clone.hide().unwrap();
-                                });
+                                
                                 
                             } else {
-                                window.show().unwrap();
-                                window.set_focus().unwrap();
+                               
                                 
-                                open_window(handler.clone());
+                                open_window( window.clone(),handler.clone());
                             }
                         }
                     }),
@@ -104,7 +97,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_log::Builder::new().build())
         
-        .invoke_handler(tauri::generate_handler![greet, open_window_js, close_window_js, search_everything_js, open_link_js])
+        .invoke_handler(tauri::generate_handler![open_window,search_js, close_window, open_link_js, set_blur_js, get_blur_js])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

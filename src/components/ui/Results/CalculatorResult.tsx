@@ -1,135 +1,55 @@
-import { Divide, Equal, MinusIcon, Percent, PlusIcon, X } from "lucide-react";
-import React, {
-	ReactNode,
-	ButtonHTMLAttributes,
-	useEffect,
-	useState,
-	useRef,
-} from "react";
+import { EllipsisVertical } from "lucide-react";
+import React from "react";
 import { useSearchStore } from "../../../hooks/search/useSearch";
 import { debug } from "@tauri-apps/plugin-log";
 
-interface CalculatorButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-	value?: string;
-	children?: ReactNode;
+import { toRelativeStr } from "../../../util/time";
+
+interface PreviousEquationProps {
+	query: string;
 }
 
-const CalculatorButton: React.FC<CalculatorButtonProps> = ({
-	value,
-	children,
-	...props
-}) => {
-	const ref = React.useRef<HTMLButtonElement>(null);
-	const [isEntered, setIsEntered] = useState(false);
+const PreviousEquation: React.FC<PreviousEquationProps> = ({ query }) => {
+	const timestamp = new Date(1740689723000); // Mock value for testing
 
-	const onKeyDown = (e) => {
-		if (e.key === value?.toString()) {
-			setIsEntered(true);
-		}
-	};
-	const onKeyUp = (e) => {
-		setTimeout(() => {
-			setIsEntered(false);
-		}, 100);
-	};
-
-	useEffect(() => {
-		document.addEventListener("keydown", onKeyDown);
-		document.addEventListener("keyup", onKeyUp);
-
-		return () => {
-			document.removeEventListener("keydown", onKeyDown);
-			document.removeEventListener("keyup", onKeyUp);
-		};
-	}, []);
+	const relativeTime = toRelativeStr(timestamp);
+	const date = timestamp.toUTCString();
 
 	return (
-		<button
-			ref={ref}
-			className={`flex w-full center h-12 bg-secondary hover:bg-selected transition-colors duration-300 ease-in-out rounded-md ${isEntered ? "bg-selected" : ""}`}
-			{...props}
-			onKeyDown={(e) => {
-				if (e.key === value?.toString()) {
-					setIsEntered(true);
-				} else {
-					setIsEntered(false);
-				}
-			}}
-			onKeyUp={(e) => {
-				setTimeout(() => {
-					setIsEntered(false);
-				}, 100);
-			}}>
-			{children || value}
-		</button>
-	);
-};
+		<div className="w-full h-12 flex flex-row p-2 justify-between items-start bg-secondary previous-equation rounded-md">
+			<div className="w-auto h-full flex flex-row gap-1 justify-center items-center bg-red-500">
+				<p className="w-full h-full text-text center">{query}</p>
+			</div>
 
-const Row = ({ children }) => {
-	return (
-		<div className="w-full h-auto flex flex-row gap-1 justify-items-stretch items-stretch bg-blue-300">
-			{children}
+			<p title={date} className="text-text text-sm">
+				{relativeTime}
+			</p>
+			<div className="aspect-square w-5 flex justify-center items-center">
+				<EllipsisVertical />
+			</div>
 		</div>
 	);
 };
 
 export const CalculatorResult = () => {
-	const buttonSize = 16;
-	const results = useSearchStore((state) => state.searchResults);
-	const searchQuery = useSearchStore((state) => state.searchQuery);
-	const previousSearchQuery = useSearchStore((state) => state.previousSearchQuery);
-	const searchDifference = searchQuery.substring(previousSearchQuery.length);
-	const resultType = useSearchStore((state) => state.searchType);
+	const previousQueries = useSearchStore((state) => state.previousQueries)
+		.filter((query) => query.searchType === "calculator")
+		.map((query) => query.query);
 
 	// useEffect(() => {
 	// 	//debug("search difference: " + searchDifference);
 	// }, [searchQuery]);
+	// debug("Results: " + results[0].query + " with type " + resultType);
 
+	debug("Previous Queries: " + previousQueries);
 	return (
-		<div className="w-full min-h-64 flex flex-col bg-red-200 gap-1 items-stretch justify-evenly">
-			<Row>
-				<CalculatorButton />
-				<CalculatorButton value={1} />
-				<CalculatorButton>
-					<Percent size={buttonSize} />
-				</CalculatorButton>
-
-				<CalculatorButton>
-					<Divide size={buttonSize} />
-				</CalculatorButton>
-			</Row>
-			<Row>
-				<CalculatorButton value={7} />
-				<CalculatorButton value={8} />
-				<CalculatorButton value={9} />
-				<CalculatorButton value={"*"}>
-					<X size={buttonSize} />
-				</CalculatorButton>
-			</Row>
-			<Row>
-				<CalculatorButton value={4} />
-				<CalculatorButton value={5} />
-				<CalculatorButton value={6} />
-				<CalculatorButton value={"-"}>
-					<MinusIcon size={buttonSize} />
-				</CalculatorButton>
-			</Row>
-			<Row>
-				<CalculatorButton value={1} />
-				<CalculatorButton value={2} />
-				<CalculatorButton value={3} />
-				<CalculatorButton value={"+"}>
-					<PlusIcon size={buttonSize} />
-				</CalculatorButton>
-			</Row>
-			<Row>
-				<CalculatorButton value={0} />
-				<CalculatorButton value={0} />
-				<CalculatorButton value={"."} />
-				<CalculatorButton value={"="}>
-					<Equal size={buttonSize} />
-				</CalculatorButton>
-			</Row>
+		<div className="w-full min-h-64 flex flex-col gap-1 items-start justify-start p-1 equation-list">
+			{previousQueries.map((query, index) => (
+				<PreviousEquation query={query} key={index} />
+			))}
+			<PreviousEquation query={"51 + 9 = 60"} />
+			<PreviousEquation query={"21 / 2 = 60"} />
+			<PreviousEquation query={"21 / 2 = 60"} />
 		</div>
 	);
 };
