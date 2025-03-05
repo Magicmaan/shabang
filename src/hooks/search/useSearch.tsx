@@ -89,7 +89,7 @@ export const useSearchStore = create<State & Action>((set) => ({
         })
 
         const result = search(query)
-            .then((results) => {
+            .then((results: searchResults) => {
                 // await new Promise((resolve) => setTimeout(resolve, 2000))
                 debug('file results count:' + results.everything?.length)
                 debug(
