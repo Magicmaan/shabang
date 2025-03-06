@@ -1,6 +1,4 @@
-<p align="center" style="font-size: 3em;">
-Shabang
-</p>
+# Shabang
 
 <p align="center">
 A quick file search and app launcher for Windows, because I got tired of existing search.
