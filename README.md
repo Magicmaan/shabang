@@ -1,8 +1,5 @@
-<p align="center">
-    <a href="https://github.com/SeakMengs/WindowPet">
-        <img src="https://user-images.githubusercontent.com/6903107/207167068-2196d2a3-2caa-4856-958b-a780fbda95c6.gif" width="500">
-    </a><br />
-    <img src="https://user-images.githubusercontent.com/6903107/207168016-85d0dd16-1f3b-4d42-9d37-0e0d5a596ead.png" width="400">
+<p align="center" style="font-size: 3em;">
+Shabang
 </p>
 
 <p align="center">
