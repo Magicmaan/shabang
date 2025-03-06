@@ -1,7 +1,3 @@
-<p align="center" style="font-size: 3em;">
-Shabang
-</p>
-
 <p align="center">
 A quick file search and app launcher for Windows, because I got tired of existing search.
 
@@ -12,7 +8,7 @@ A quick file search and app launcher for Windows, because I got tired of existin
 <h4 align="center">
   <a href="#-features">Features</a> •
   <a href="#-hotkeys">Hotkeys</a> •
-  <a href="#-todo-in-progress">TODO / In Progress</a>
+  <a href="#-Planned-Features">TODO / In Progress</a>
 </h4>
 
 <img src="https://user-images.githubusercontent.com/6903107/144858082-8b654daf-60fb-4ee6-89b2-6183b73510d1.png" width="100%">
