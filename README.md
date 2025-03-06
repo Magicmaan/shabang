@@ -70,17 +70,35 @@ Shabang is a file searching / help tool for Windows, built with Tauri.
 ### Short Term
 
 - Context menu
-- direct website searching (youtube, twitter, etc) through bangs
+- Click-through
+- Direct website searching (youtube, twitter, etc) through bangs
 - Custom bangs through localStorage / rust
+- Improve search
+
+    - custom indexing / memory of recent searches
+    - better sorting
+        - index application folders
+        - index certain keyword folders ( Steam, github folders (not files or node modules)), some appdata files
+        - sort by filetype (exe > documents + media (minus .txt) > unknown > .zip > code files > txt / blank files )
+        - ignore certain folders ( program data etc )
+        - set search options
+    - better formatting
+    - File access monitoring
+        - Show recently opened stuff / often accessed
+        - index commonly accessed folders, within reason
+        - show recent browser history, within reason ( only major sites, no banking etc )
+
 - Volume control through search
     - quick volume for open apps
     - mute
     - apple music integration
 - UI customisation
+
     - Position of UI
     - Blur background
-    - click-through
+
     - search result format
+
 - Widgets
     - Quick access widgets
     - Utility widgets (volume control, screenshot etc)
@@ -95,6 +113,17 @@ Shabang is a file searching / help tool for Windows, built with Tauri.
 
 ### Long Term
 
+- Startup / initialisation
+
+    - Replace windows search
+    - Give helpful tools / store apps which are just nice
+        - Disabling cortana
+        - disabling internet search on windows search
+        - Windows 10 context menu regedit (I'm dreading moving to windows 11)
+        - Windows 11 debloat tool
+        - Better flyouts
+    - All obviously optional and tucked away on purpose (I hate intrusion)
+
 - Open applications
 
     - View open applications
@@ -103,24 +132,24 @@ Shabang is a file searching / help tool for Windows, built with Tauri.
     - Pin window open
     - Pin window to search (so open when searcher is open)
 
-- PowerToys
+- PowerToys integration
 
     - Add widgets / tools from powertoys
     - Have dummy cheatsheet of keybinds
         > Can i just mention how great powertoys. Love that program
 
-- Canvas / Draw system
+- AI bang / widget
 
+    - AI widget accessed through !ai
+    - queries open.ai or ai of choice to give answer in search
+    - off by default
+
+- Services integrations
+
+    - Google drive etc
+
+- Canvas / Draw system
     - Paste / keep images on search window
     - Keep notes in search window
     - pin image to desktop
     - Image text extraction
-
-- Startup / initialisation
-    - Give helpful tools / store apps which are just nice
-        - Disabling cortana
-        - disabling internet search on windows search
-        - Windows 10 context menu regedit (I'm dreading moving to windows 11)
-        - Windows 11 debloat tool
-        - Better flyouts
-    - All obviously optional and tucked away on purpose (I hate intrusion)
