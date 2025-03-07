@@ -1,11 +1,7 @@
-use std::collections::HashMap;
 use config::Config;
-use std::error::Error;
 use dirs;
-
-
-
-
+use std::collections::HashMap;
+use std::error::Error;
 
 // pub fn get_settings() -> Result<Config, Box<dyn Error>> {
 //     let settings_file = dirs::data_dir().unwrap().join("Settings.toml");

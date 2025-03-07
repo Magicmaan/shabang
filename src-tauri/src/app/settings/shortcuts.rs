@@ -1,5 +1,4 @@
-
-use tauri_plugin_global_shortcut::{Shortcut, Code, Modifiers};
+use tauri_plugin_global_shortcut::{Code, Modifiers, Shortcut};
 
 #[derive(Debug)]
 pub struct Shortcuts {
@@ -10,7 +9,8 @@ pub struct Shortcuts {
 impl Shortcuts {
     pub fn new() -> Self {
         Self {
-            toggle_window: Shortcut::new(Some(Modifiers::SUPER | Modifiers::SHIFT), Code::KeyR).to_string(),
+            toggle_window: Shortcut::new(Some(Modifiers::SUPER | Modifiers::SHIFT), Code::KeyR)
+                .to_string(),
             // Initialize more shortcuts as needed
         }
     }

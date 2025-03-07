@@ -1,27 +1,28 @@
-
 use everything_sdk::EverythingError;
 
-use crate::app::types::search::AppResult;
 use crate::app::search::everything;
+use crate::app::types::search::AppResult;
 
 // app locations
 // C:\ProgramData\Microsoft\Windows\Start Menu\Programs
-
 
 pub fn search(query: String) -> std::result::Result<Vec<AppResult>, EverythingError> {
     let mut results_vec: Vec<AppResult> = Vec::new();
     if query.len() < 2 {
         return Err(EverythingError::InvalidCall);
     }
-   
+
     //format query to only search in the app locations
-    let query = format!("\"{path}\" {q}", path = r"C:\ProgramData\Microsoft\Windows\Start Menu\Programs", q = query);
+    let query = format!(
+        "\"{path}\" {q}",
+        path = r"C:\ProgramData\Microsoft\Windows\Start Menu\Programs",
+        q = query
+    );
     println!("App search query: {}", query);
     let result = match everything::search(query) {
         Ok(res) => res,
         Err(e) => return Err(e),
     };
-
 
     for item in result {
         let readable_name = item.readable_name;

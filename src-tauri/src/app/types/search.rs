@@ -1,6 +1,3 @@
-
-
-
 pub enum SearchType {
     calculator,
     file,
@@ -8,9 +5,7 @@ pub enum SearchType {
     setting,
 }
 
-
-#[derive(serde::Serialize)]
-#[derive(Debug)]
+#[derive(serde::Serialize, Debug)]
 pub struct EverythingResult {
     pub readable_name: String,
     pub name: String,
@@ -18,24 +13,20 @@ pub struct EverythingResult {
     pub category: String,
 }
 
-#[derive(serde::Serialize)]
-#[derive(Debug)]
+#[derive(serde::Serialize, Debug)]
 pub struct ControlPanelResult {
     pub readable_name: String,
     pub name: String,
     pub category: String,
 }
 
-#[derive(serde::Serialize)]
-#[derive(Debug)]
+#[derive(serde::Serialize, Debug)]
 pub struct AppResult {
     pub readable_name: String,
     pub name: String,
     pub path: String,
     pub category: String,
 }
-
-
 
 #[derive(serde::Serialize)]
 pub struct searchResult {

@@ -13,7 +13,9 @@ fn get_everything() -> MutexGuard<'static, EverythingGlobal> {
                 retries -= 1;
                 std::thread::sleep(std::time::Duration::from_millis(100));
             }
-            Err(_) => println!("Failed to acquire lock on Everything instance after multiple attempts"),
+            Err(_) => {
+                println!("Failed to acquire lock on Everything instance after multiple attempts")
+            }
         }
     }
 }
@@ -33,7 +35,6 @@ fn set_search(query: String, searcher: &mut EverythingSearcher) {
         .set_match_case(false);
 }
 
-
 pub fn search(query: String) -> std::result::Result<Vec<EverythingResult>, EverythingError> {
     // At first, we should clearly understand that Everything-SDK IPC code is
     // based on **global mutable static variables** (the internal state is
@@ -48,8 +49,12 @@ pub fn search(query: String) -> std::result::Result<Vec<EverythingResult>, Every
 
     // Check whether the Everything.exe in the background is running.
     match everything.is_db_loaded() {
-        Ok(false) => {return Err(EverythingError::InvalidCall);},
-        Err(EverythingError::Ipc) => {return Err(EverythingError::Ipc);},
+        Ok(false) => {
+            return Err(EverythingError::InvalidCall);
+        }
+        Err(EverythingError::Ipc) => {
+            return Err(EverythingError::Ipc);
+        }
         _ => {
             // Now _Everything_ is OK!
             // We got the searcher, which can be reused for multiple times queries and cleans up
@@ -84,17 +89,14 @@ pub fn search(query: String) -> std::result::Result<Vec<EverythingResult>, Every
                 let full_path = item.filepath().unwrap();
                 let _file_name = item.filename().unwrap();
                 let _size = item.size().unwrap();
-                
+
                 // add to results
-                results_vec.push(EverythingResult{
+                results_vec.push(EverythingResult {
                     readable_name: _file_name.to_string_lossy().to_string(),
                     name: full_path.to_string_lossy().to_string(),
                     path: full_path.to_string_lossy().to_string(),
                     category: "Everything".to_string(),
-                }
-                
-                );
-               
+                });
             }
 
             // Or you are only interested in the run count of the 3rd result in Everything Run History.
@@ -109,7 +111,6 @@ pub fn search(query: String) -> std::result::Result<Vec<EverythingResult>, Every
 
             // Remember, because of global variables, there can only be one `everything`, `searcher`
             // and `results` at any time during the entire program lifetime.
-
         }
     }
     // Remember the LIFETIME again!
@@ -121,7 +122,5 @@ pub fn search(query: String) -> std::result::Result<Vec<EverythingResult>, Every
         .is_appdata()
         .unwrap();
 
-    
     Ok(results_vec)
-
 }

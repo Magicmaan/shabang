@@ -1,5 +1,5 @@
-use std::sync::{Arc, Mutex};
 use std::str::FromStr;
+use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use tauri::{
     menu::{MenuBuilder, MenuItemBuilder},
@@ -8,14 +8,17 @@ use tauri::{
 };
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut};
 
-
 // function takes in the shortcut combo, onpress and onrelease functions
 // returns a function thats then used to handle the event
 // i.e. let x = make_shortcut(shortcut, onpress, onrelease)
 //      x(hotkey, event)
 
 // https://github.com/tw93/Pake/blob/3d3528f3bb1b21ad0caac75f90ebfa6c5f5dcb9c/src-tauri/src/app/setup.rs#L60
-pub fn make_shortcut(app: &AppHandle, shortcut: String, on_press: Arc<dyn Fn() + Send + Sync>) -> tauri::Result<()> {
+pub fn make_shortcut(
+    app: &AppHandle,
+    shortcut: String,
+    on_press: Arc<dyn Fn() + Send + Sync>,
+) -> tauri::Result<()> {
     if shortcut.is_empty() {
         return Ok(());
     }

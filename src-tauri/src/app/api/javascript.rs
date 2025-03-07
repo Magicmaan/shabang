@@ -1,26 +1,25 @@
-use std::sync::Arc;
 use serde::Serialize;
 use serde_json::Number;
-use tauri::{Manager, State};
+use std::sync::Arc;
 use std::{thread, time};
+use tauri::{Manager, State};
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-use tauri::{AppHandle, Emitter};
-use tauri_plugin_global_shortcut::{Code, Modifiers, Shortcut, ShortcutState};
-use lazy_static::lazy_static;
-use window_vibrancy::{apply_blur, apply_vibrancy, NSVisualEffectMaterial, apply_acrylic, clear_acrylic, clear_blur};
 use crate::app::types::search::searchResult;
 use crate::{app, AppState, BlurStyle};
-use app::search::everything;
-use app::search::controlpanel;
 use app::search::application;
-use tauri_plugin_opener::OpenerExt;
+use app::search::controlpanel;
+use app::search::everything;
+use lazy_static::lazy_static;
 use std::sync::Mutex;
 use std::time::Instant;
-use tauri::ipc::Response;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
-
-
-
+use tauri::ipc::Response;
+use tauri::{AppHandle, Emitter};
+use tauri_plugin_global_shortcut::{Code, Modifiers, Shortcut, ShortcutState};
+use tauri_plugin_opener::OpenerExt;
+use window_vibrancy::{
+    apply_acrylic, apply_blur, apply_vibrancy, clear_acrylic, clear_blur, NSVisualEffectMaterial,
+};
 
 // #[tauri::command]
 // pub fn get_settings_js() -> String {
@@ -28,8 +27,6 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 //     let s = "settings".to_string();
 //     s
 // }
-
-
 
 // Open Close window
 #[tauri::command]
@@ -83,14 +80,18 @@ pub fn close_window(webview_window: tauri::WebviewWindow, app_handle: tauri::App
 // }
 
 #[tauri::command]
-pub fn set_blur_js(window: tauri::WebviewWindow, state: State<'_, Mutex<AppState>>, blur: bool, colour: Option<(u8, u8, u8, u8)>, style: String) {
+pub fn set_blur_js(
+    window: tauri::WebviewWindow,
+    state: State<'_, Mutex<AppState>>,
+    blur: bool,
+    colour: Option<(u8, u8, u8, u8)>,
+    style: String,
+) {
     let mut state = state.lock().unwrap();
 
     let state_enabled = &state.use_blur;
     let state_colour = &state.blur_colour;
     let state_style = &state.blur_style;
-
-
 
     println!("set_blur_js: {}", blur);
     println!("args: {:?}", colour);
@@ -103,14 +104,16 @@ pub fn set_blur_js(window: tauri::WebviewWindow, state: State<'_, Mutex<AppState
     if blur {
         match style {
             BlurStyle::Acrylic => {
-                apply_acrylic(&window, colour).expect("Unsupported platform! 'apply_blur' is only supported on Windows");
-            },
+                apply_acrylic(&window, colour)
+                    .expect("Unsupported platform! 'apply_blur' is only supported on Windows");
+            }
             BlurStyle::Blur => {
-                apply_blur(&window, colour).expect("Unsupported platform! 'apply_blur' is only supported on Windows");
-            },
+                apply_blur(&window, colour)
+                    .expect("Unsupported platform! 'apply_blur' is only supported on Windows");
+            }
             BlurStyle::Vibrancy => {
-                println!("Vibrancy"); 
-            },
+                println!("Vibrancy");
+            }
         }
         // apply_acrylic(&window, colour).expect("Unsupported platform! 'apply_blur' is only supported on Windows");
         state.use_blur = true;
@@ -118,11 +121,12 @@ pub fn set_blur_js(window: tauri::WebviewWindow, state: State<'_, Mutex<AppState
             state.blur_colour = colour;
         }
         println!("Enabled blur");
-
     } else {
         println!("Disabled blur");
-        clear_acrylic(&window).expect("Unsupported platform! 'apply_blur' is only supported on Windows"); 
-        clear_blur(&window).expect("Unsupported platform! 'apply_blur' is only supported on Windows");
+        clear_acrylic(&window)
+            .expect("Unsupported platform! 'apply_blur' is only supported on Windows");
+        clear_blur(&window)
+            .expect("Unsupported platform! 'apply_blur' is only supported on Windows");
         state.use_blur = false;
     }
 }
@@ -130,10 +134,9 @@ pub fn set_blur_js(window: tauri::WebviewWindow, state: State<'_, Mutex<AppState
 #[tauri::command]
 pub fn get_blur_js(state: State<'_, Mutex<AppState>>) -> bool {
     let mut state = state.lock().unwrap();
-    
+
     state.use_blur
 }
-
 
 #[tauri::command]
 pub fn open_link_js(link: &str, app_handle: tauri::AppHandle) {
@@ -150,8 +153,14 @@ pub async fn search_js(query: String, app: AppHandle) -> Result<searchResult, St
     println!("search_js: {}", query);
     let start_time = SystemTime::now();
     let time = start_time.duration_since(UNIX_EPOCH).unwrap();
-    app.emit("searching", SearchingProgress{ time: Number::from(time.as_secs()) }).unwrap();
-    
+    app.emit(
+        "searching",
+        SearchingProgress {
+            time: Number::from(time.as_secs()),
+        },
+    )
+    .unwrap();
+
     let app_result = match application::search(query.clone()) {
         Ok(res) => res,
         Err(e) => return Err(e.to_string()),
@@ -160,11 +169,11 @@ pub async fn search_js(query: String, app: AppHandle) -> Result<searchResult, St
     let mut everything_result = Vec::new();
     if query.len() > 3 {
         everything_result = match everything::search(query.clone()) {
-        Ok(res) => res,
-        Err(e) => return Err(e.to_string()),
-    };
+            Ok(res) => res,
+            Err(e) => return Err(e.to_string()),
+        };
     }
-    
+
     let controlpanel_result = controlpanel::search(query.clone());
 
     Ok(searchResult {
