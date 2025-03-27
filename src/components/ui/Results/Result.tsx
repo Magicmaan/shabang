@@ -1,30 +1,90 @@
-import { AppWindow, Settings, File, MonitorCog } from 'lucide-react'
+import {
+    AppWindow,
+    Settings,
+    File,
+    MonitorCog,
+    Folder,
+    FolderClosed,
+    Frown,
+    Icon,
+} from 'lucide-react'
 import { LucideIcon } from 'lucide-react'
 import { useCallback, useMemo, useRef } from 'react'
-import { useSearchStore } from '../../../hooks/search/useSearch'
+import { createSearchSlice } from '../../../hooks/search/useSearch'
 import { openPath } from '@tauri-apps/plugin-opener'
 import { invoke } from '@tauri-apps/api/core'
-import { twMerge } from 'tailwind-merge'
+import { cn } from '@/lib/utils'
 import {
-    ApplicationResult,
-    ControlPanelResult,
-    EverythingResult,
+    ApplicationData,
+    ControlPanelData,
+    EverythingData,
+    EverythingError,
 } from '@/types/searchTypes'
+import { debug } from '@tauri-apps/plugin-log'
+import { extname } from '@tauri-apps/api/path'
 
-const fileIcons: { [key: string]: LucideIcon } = {
-    default: File,
-    exe: AppWindow,
-    lnk: AppWindow,
-    setting: MonitorCog,
+import { fileIcons } from '@/constants/fileIcons'
+import { fileShortcutAlias } from '@/constants/files'
+import { open } from '@/backend/command'
+import { bangAction } from '@/hooks/search/Bangs'
+import { useAppStore } from '@/hooks/useApp'
+import { cva } from 'class-variance-authority'
+
+const ResultStyles = cva(
+    `group flex w-full flex-row overflow-hidden rounded-md  transition-all duration-300 hover:cursor-pointer
+    `,
+    {
+        variants: {
+            type: {
+                default: 'bg-li-25 h-14 ',
+                bang: 'h-10 bg-li-75 dark:bg-li-25 border-2 border-global-li-10',
+            },
+            keybind: {
+                true: '[&_.result-keybind]:inline',
+                false: '[&_.result-keybind]:hidden',
+            },
+            icon: {
+                small: '[&_svg]:h-8 [&>svg]:w-8 [&_.icon-container]:rounded-md',
+                medium: '[&_svg]:h-10 [&>svg]:w-10 [&_.icon-container]:rounded-lg',
+                large: '[&_svg]:h-12 [&>svg]:w-12 [&_.icon-container]:rounded-lg',
+            },
+        },
+        defaultVariants: {
+            type: 'default',
+            keybind: true,
+            icon: 'medium',
+        },
+    }
+)
+
+export const ResultsPlaceholder = ({ active }: { active: boolean }) => {
+    return (
+        <div
+            aria-hidden={!active}
+            aria-disabled={!active}
+            className={`scrollbar group bg-primary border-primary absolute z-10 h-auto w-full overflow-y-scroll pb-2 transition-all duration-500 ease-in-out aria-hidden:pointer-events-none aria-hidden:opacity-0`}
+        >
+            <ul>
+                {[...Array(5)].map((_, i) => {
+                    return (
+                        <li index={i}>
+                            <PlaceHolderResult index={i} />
+                        </li>
+                    )
+                })}
+            </ul>
+        </div>
+    )
 }
 
-const fileShortcutAlias: { [key: string]: string } = {
-    'AppData\\Local': '%LOCALAPPDATA%',
-    AppData: '%APPDATA%',
-    'Program Files': '%PROGRAMFILES%',
-    'Program Files (x86)': '%PROGRAMFILES(X86)%',
-    Windows: '%SYSTEMROOT%',
-    UserProfile: '%USERPROFILE%',
+export const ResultsError = ({ error }: { error: EverythingError }) => {
+    return (
+        <div className="flex h-full w-full flex-col items-center justify-center gap-2">
+            <Frown size={64} />
+            <h1 className="text-text text-xl">{error.name}</h1>
+            <p className="text-text">{error.message}</p>
+        </div>
+    )
 }
 
 type ResultProps = {
@@ -37,10 +97,11 @@ type ResultProps = {
     IconProps?: React.SVGProps<SVGSVGElement>
     type: 'file' | 'setting' | 'app'
     selected?: number
-    key: number
+    index: number
     data?: {
         path?: string
     }
+    className?: string
 }
 
 const Result = ({
@@ -54,77 +115,81 @@ const Result = ({
     data,
     className,
     selected,
-    key,
-}: ResultProps & { className?: string }) => {
+    index,
+}: ResultProps) => {
     if (!Icon) Icon = fileIcons.default
     const ref = useRef<HTMLDivElement>(null)
-    const open = useSearchStore((state) => state.openFile)
 
     return (
-        <div
-            key={key}
-            aria-selected={selected === key}
-            // prettier-ignore
-            className={twMerge(
-            `group flex h-14 w-full 
-            flex-row overflow-hidden rounded-md 
-            bg-black/10 transition-all 
-            duration-300 hover:cursor-pointer`,
-            className
-            )}
-        >
+        <>
             <div
-                aria-selected={selected === key}
-                className="group group-hover:bg-selected focus:bg-selected aria-selected:bg-selected flex h-full w-full flex-row gap-2 overflow-hidden p-2 transition-colors duration-300 hover:cursor-pointer"
-                ref={ref}
-                onPointerDown={(e) => {
-                    if (!data?.path) return
-                    if (e.button !== 0) return
-                    open(data?.path, false)
-                    e.currentTarget.focus()
-                }}
+                index={index}
+                aria-selected={selected === index}
+                data-type={type}
+                // prettier-ignore
+                className={cn(
+                    ResultStyles(),className
+                        )}
             >
-                <div className="flex aspect-square h-10 items-center justify-center rounded-xl bg-white/5 p-1">
-                    <Icon
-                        absoluteStrokeWidth
-                        strokeWidth={2}
-                        className="stroke-text-secondary aspect-square h-full w-full"
-                        {...IconProps}
-                    />
-                </div>
                 <div
-                    className="flex h-auto w-full flex-col overflow-hidden text-wrap"
-                    title={mainText}
+                    aria-selected={Math.floor(selected || 1) === index}
+                    className="group group-hover:bg-selected focus:bg-selected aria-selected:bg-selected flex h-full w-full flex-row gap-2 overflow-hidden p-2 transition-colors duration-300 hover:cursor-pointer"
+                    ref={ref}
+                    onPointerDown={(e) => {
+                        if (!data?.path) return
+                        if (e.button !== 0) return
+                        open(data?.path)
+                        e.currentTarget.focus()
+                    }}
                 >
-                    <p className="text-primary fade-text-right text-nowrap">
-                        {mainText}
-                    </p>
-
-                    <div
-                        className="flex w-auto max-w-full flex-row gap-2 pl-2"
-                        title={subText}
-                    >
-                        <p className="text-secondary fade-text-right w-full text-xs text-nowrap">
-                            {subText}
-                        </p>
+                    <div className="bg-da-10 icon-container flex aspect-square h-auto w-auto items-center justify-center p-1">
+                        <Icon
+                            absoluteStrokeWidth
+                            strokeWidth={2}
+                            className="stroke-text-secondary aspect-square"
+                            {...IconProps}
+                        />
                     </div>
+                    <div
+                        className="flex h-auto w-full flex-col overflow-hidden text-wrap"
+                        title={mainText}
+                    >
+                        <p className="text-primary fade-right text-nowrap">
+                            {mainText}
+                        </p>
+
+                        <div
+                            className="flex w-auto max-w-full flex-row gap-2 pl-2"
+                            title={subText}
+                        >
+                            <p className="text-secondary fade-right w-3/4 text-xs text-nowrap">
+                                {subText}
+                            </p>
+                        </div>
+                    </div>
+                    <p className="result-keybind text-secondary text-sm text-nowrap">
+                        <kbd>Alt</kbd>
+                        {' + '}
+                        <kbd>{index}</kbd>
+                    </p>
+                </div>
+                <div className="flex h-full w-0 flex-col border-white/10 bg-black/5 transition-all delay-300 duration-200 group-hover:w-14 group-hover:border-l-2 dark:border-white/50 dark:bg-white/5">
+                    + -
                 </div>
             </div>
-            <div className="dark: flex h-full w-0 flex-col border-black/10 bg-black/5 transition-all delay-300 duration-200 group-hover:w-14 group-hover:border-l-2 dark:border-white/50 dark:bg-white/5">
-                + -
-            </div>
-        </div>
+            <div className="fade-x mx-auto h-0.5 w-9/10 bg-black/10 dark:bg-black/20" />
+        </>
     )
 }
 
 export const FileResult = ({
     result,
     selected,
-    key,
+    index,
 }: {
-    result: ApplicationResult
+    result: ApplicationData
     selected: number
-    key: number
+    index: number
 }) => {
     const filePath = useMemo(() => {
         let filePath = result.path.split('\\').slice(0, -1).join('\\')
@@ -140,17 +205,19 @@ export const FileResult = ({
         return filePath
     }, [result])
 
+    const icon =
+        fileIcons[result.path.split('.').pop()?.toLowerCase() || 'default']
     return (
         <Result
-            key={key}
+            index={index}
             selected={selected}
             mainText={result.readable_name}
             subText={filePath}
+            Icon={icon}
             data={{
                 path: result.path,
             }}
             type="file"
-            className={selected == key ? 'bg-selected' : ''}
         />
     )
 }
@@ -158,16 +225,17 @@ export const FileResult = ({
 export const SettingResult = ({
     result,
     selected,
-    key,
+    index, // Add index prop
 }: {
-    result: ControlPanelResult
+    result: ControlPanelData
     selected: number
-    key: number
+    index: number // Add index type
 }) => {
+    debug('setting index: ' + index)
     return (
         <Result
             data-slot="context-menu-trigger"
-            key={key}
+            index={index}
             selected={selected}
             mainText={result.readable_name}
             subText={'Control Panel'}
@@ -187,11 +255,11 @@ export const SettingResult = ({
 export const AppResult = ({
     result,
     selected,
-    key,
+    index,
 }: {
-    result: ApplicationResult
+    result: ApplicationData
     selected: number
-    key: number
+    index: number
 }) => {
     const filePath = useMemo(() => {
         let filePath = result.path.split('\\').slice(0, -1).join('\\')
@@ -211,7 +279,7 @@ export const AppResult = ({
 
     return (
         <Result
-            key={key}
+            index={index}
             selected={selected}
             mainText={result.readable_name}
             subText={filePath}
@@ -249,5 +317,74 @@ export const PlaceHolderResult = () => {
                 </div>
             </div>
         </div>
+    )
+}
+
+export const BangResult = ({
+    bang,
+    selected,
+    index,
+}: {
+    bang: bangAction
+    selected: number
+    index: number
+}) => {
+    const { searchType, transformer, action, alias, description } = bang
+    const ref = useRef<HTMLDivElement>(null)
+    const type = 'bang'
+
+    let query: string | null = useAppStore((state) => state.search.searchQuery)
+    const bangSelector = useAppStore((state) => state.settings.bangSelector)
+
+    return (
+        <>
+            <div
+                index={index}
+                aria-selected={selected === index}
+                data-type={type}
+                // prettier-ignore
+                className=
+                    {cn(ResultStyles({type:"bang", keybind:false, icon:"small"}))}
+            >
+                <div
+                    aria-selected={Math.floor(selected || 1) === index}
+                    className="group group-hover:bg-selected focus:bg-selected aria-selected:bg-selected flex h-full w-full flex-row gap-2 overflow-hidden p-2 transition-colors duration-300 hover:cursor-pointer"
+                    ref={ref}
+                    onPointerDown={(e) => {
+                        if (action) {
+                            action()
+                        }
+                    }}
+                >
+                    <div className="bg-da-10 icon-container flex aspect-square h-auto w-auto items-center justify-center p-1">
+                        <fileIcons.google className="stroke-text-secondary aspect-square" />
+                    </div>
+                    <div
+                        className="flex h-auto w-full flex-row overflow-hidden text-wrap"
+                        title={bang.alias}
+                    >
+                        <p className="text-primary text-sm">
+                            <strong>
+                                {bangSelector[0]}
+                                {bang.alias}
+                            </strong>{' '}
+                            {` / ${bang.description}`}
+                            {bang.action &&
+                                query?.length > 0 &&
+                                `/ ${query} `}{' '}
+                        </p>
+                    </div>
+                    <p className="result-keybind text-secondary text-sm text-nowrap">
+                        <kbd>Alt</kbd>
+                        {' + '}
+                        <kbd>{index}</kbd>
+                    </p>
+                </div>
+                <div className="flex h-full w-0 flex-col border-white/10 bg-black/5 transition-all delay-300 duration-200 group-hover:w-14 group-hover:border-l-2 dark:border-white/50 dark:bg-white/5">
+                    + -
+                </div>
+            </div>
+            <div className="fade-x mx-auto h-0.5 w-9/10 bg-black/10 dark:bg-black/20" />
+        </>
     )
 }

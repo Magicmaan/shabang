@@ -2,6 +2,7 @@ use std::sync::{MutexGuard, TryLockError};
 
 use everything_sdk::*;
 
+
 use crate::app::types::search::EverythingResult;
 
 fn get_everything() -> MutexGuard<'static, EverythingGlobal> {
@@ -44,9 +45,14 @@ pub fn search(query: String) -> std::result::Result<Vec<EverythingResult>, Every
     // will only be processed serially by the Everything.exe (ver 1.4.1) process.
 
     // So we need and can only do the query serially via global states.
-    let mut everything = get_everything();
+    
+    if query.len() < 3 {
+        return Err(EverythingError::InvalidCall);
+    }
     let mut results_vec: Vec<EverythingResult> = Vec::new();
 
+    let mut everything = get_everything();
+    
     // Check whether the Everything.exe in the background is running.
     match everything.is_db_loaded() {
         Ok(false) => {

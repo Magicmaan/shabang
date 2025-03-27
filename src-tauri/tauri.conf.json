@@ -18,11 +18,11 @@
                 "width": 800,
                 "height": 600,
                 "fullscreen": false,
-                "maximized": true,
+                "maximized": false,
                 "resizable": false,
                 "alwaysOnTop": true,
-
-                "decorations": false
+                "decorations": false,
+                "shadow": false
             }
         ],
 

@@ -5,7 +5,7 @@ pub enum SearchType {
     setting,
 }
 
-#[derive(serde::Serialize, Debug)]
+#[derive(serde::Serialize, Debug, Clone)]
 pub struct EverythingResult {
     pub readable_name: String,
     pub name: String,
@@ -13,14 +13,14 @@ pub struct EverythingResult {
     pub category: String,
 }
 
-#[derive(serde::Serialize, Debug)]
+#[derive(serde::Serialize, Debug, Clone)]
 pub struct ControlPanelResult {
     pub readable_name: String,
     pub name: String,
     pub category: String,
 }
 
-#[derive(serde::Serialize, Debug)]
+#[derive(serde::Serialize, Debug, Clone)]
 pub struct AppResult {
     pub readable_name: String,
     pub name: String,
@@ -28,7 +28,7 @@ pub struct AppResult {
     pub category: String,
 }
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, Clone)]
 pub struct searchResult {
     pub everything: Vec<EverythingResult>,
     pub controlpanel: Vec<ControlPanelResult>,

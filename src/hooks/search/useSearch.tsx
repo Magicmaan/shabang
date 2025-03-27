@@ -1,15 +1,21 @@
-import { invoke } from '@tauri-apps/api/core'
+import { invoke, Channel } from '@tauri-apps/api/core'
 import { debug, error } from '@tauri-apps/plugin-log'
-import { create } from 'zustand'
+import { create, StateCreator } from 'zustand'
 import * as math from 'mathjs'
 import { getSearchType } from './searchType'
 import {
+    ApplicationData,
+    ControlPanelData,
     EverythingError,
+    EverythingData,
     searchResults,
     searchTypes,
-} from '../../types/searchTypes'
+} from '@/types/searchTypes'
 import { openPath } from '@tauri-apps/plugin-opener'
 import { listen } from '@tauri-apps/api/event'
+import { getBang } from './Bangs'
+
+import { search } from '@/backend/command'
 
 type State = {
     searchQuery: string
@@ -21,112 +27,220 @@ type State = {
 }
 type Action = {
     search: (query: string) => Promise<searchResults>
-    openFile: (path: string, useExplorer: boolean) => void
     addToHistory: (query: string, searchType: searchTypes) => void
     addLatestToHistory: () => void
 }
 
-const searchMath = async (query: string) => {
-    var results = math.evaluate(query)
-    if (
-        results === undefined ||
-        results === null ||
-        isNaN(results) ||
-        !isFinite(results) ||
-        results === ''
-    ) {
-        results = 'Invalid Equation'
-    }
-    return results
+export type SearchSlice = {
+    search: State & Action
 }
 
-const search = async (query: string): Promise<searchResults> => {
-    const results = invoke('search_js', { query })
-        .then((res) => {
-            if (!res) {
-                throw new EverythingError('No results.', 'No results found')
+export const createSearchSlice: StateCreator<
+    SearchSlice,
+    [],
+    [],
+    SearchSlice
+> = (set, get) => ({
+    search: {
+        searchQuery: '',
+        previousQueries: [],
+        previousSearchQuery: '',
+        searchResults: { everything: [], controlpanel: [], application: [] },
+        searchType: searchTypes.file,
+        isSearching: false,
+        searchHistory: [],
+
+        search: async (_query: string) => {
+            if (_query.trim() === '') {
+                set((state) => ({
+                    ...state,
+                    search: {
+                        ...state.search,
+                        searchResults: new EverythingError(
+                            'No query.',
+                            'No query.'
+                        ),
+                        searchType: searchTypes.error,
+                        isSearching: false,
+                    },
+                }))
+                throw new EverythingError('No query.', 'No query.')
             }
-            return res as searchResults
-        })
-        .catch((e) => {
-            throw new EverythingError(e, 'Error searching.')
-        })
-    debug('Results type: ' + typeof results)
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-    return results
-}
 
-const formatInputSearch = (query_: string) => {
-    const trimmed = query_.trim()
-    trimmed.replace('÷', '/')
-    trimmed.replace('×', '*')
-    const { searchType, query } = getSearchType(trimmed)
+            const results: searchResults = {
+                everything: [],
+                controlpanel: [],
+                application: [],
+                internet: undefined,
+                bang: undefined,
+            }
 
-    return { searchType, query }
-}
-interface SearchingProgress {
-    time: number
-}
-export const useSearchStore = create<State & Action>((set) => ({
-    searchQuery: '',
-    previousQueries: [],
-    previousSearchQuery: '',
-    searchResults: { everything: [], controlpanel: [], application: [] },
-    searchType: searchTypes.file,
-    isSearching: false,
-    searchHistory: [],
+            set((state) => ({
+                ...state,
+                search: {
+                    ...state.search,
+                    searchResults: {
+                        everything: [],
+                        controlpanel: [],
+                        application: [],
+                    },
+                },
+            }))
 
-    search: async (_query: string) => {
-        const { searchType, query } = formatInputSearch(_query)
-        const oldQuery = useSearchStore.getState().searchQuery
-        set({ previousSearchQuery: oldQuery })
-        set({ searchQuery: query })
+            let query = _query
+            let searchType = searchTypes.file
+            // identify bangs
 
-        debug('Searching for ' + query + ' with type ' + searchType)
+            // console.log('query before bang', query)
 
-        const isSearching = listen<SearchingProgress>('searching', (event) => {
-            set({ isSearching: true })
-        })
+            const bangResult = getBang(_query)
 
-        const result = search(query)
-            .then((results: searchResults) => {
-                // await new Promise((resolve) => setTimeout(resolve, 2000))
-                debug('file results count:' + results.everything?.length)
-                debug(
-                    'controlpanel results count:' + results.controlpanel?.length
-                )
+            if (bangResult) {
+                const b = bangResult[0]
+                query = bangResult[1]
+                searchType = b.searchType
 
-                set({ searchResults: results })
-                set({ searchType })
-                set({ isSearching: false })
-                return results
+                console.log('Bang found')
+                // console.log(b)
+                console.log('bang query', query)
+                results.bang = b
+
+                set((state) => ({
+                    ...state,
+                    search: {
+                        ...state.search,
+                        searchResults: {
+                            ...state.search.searchResults,
+                            bang: b,
+                        },
+                    },
+                }))
+            } else {
+                // if no bangs found, search
+                const { searchType: st, query: q } = getSearchType(_query)
+                searchType = st
+                query = q
+            }
+
+            // add new query to store
+            const oldQuery = get().search.searchQuery
+            set((state) => ({
+                search: {
+                    ...state.search,
+                    previousSearchQuery: oldQuery,
+                    searchQuery: query,
+                },
+            }))
+
+            // console.log('Searching for ' + query + ' with type ' + searchType)
+
+            set((state) => ({
+                search: {
+                    ...state.search,
+                    searchType,
+                },
+            }))
+            search({
+                query,
+                onStart: (event) => {
+                    const curQ = get().search.searchQuery
+                    console.log('searching ', event.data.query)
+                    console.log('current query is', curQ)
+                    set((state) => ({
+                        search: {
+                            ...state.search,
+                            isSearching: true,
+                        },
+                    }))
+                },
+                onEverythingResult: (event) => {
+                    // debug('Got everything results')
+                    // console.log(event)
+
+                    // add result
+                    results.everything = event.data.data
+                    set((state) => ({
+                        search: {
+                            ...state.search,
+                            searchResults: {
+                                ...state.search.searchResults,
+                                everything: event.data.data,
+                            },
+                        },
+                    }))
+                },
+                onAppResult: (event) => {
+                    // debug('Got application results')
+                    // console.log(event)
+
+                    results.application = event.data.data
+                    set((state) => ({
+                        search: {
+                            ...state.search,
+                            searchResults: {
+                                ...state.search.searchResults,
+                                application: event.data.data,
+                            },
+                        },
+                    }))
+                },
+                onControlPanelResult: (event) => {
+                    // debug('Got control panel results')
+                    // console.log(event)
+
+                    results.controlpanel = event.data.data
+                    set((state) => ({
+                        search: {
+                            ...state.search,
+                            searchResults: {
+                                ...state.search.searchResults,
+                                controlpanel: event.data.data,
+                            },
+                        },
+                    }))
+                },
+                onFinished: (event) => {
+                    // debug('Finished searching')
+
+                    set((state) => ({
+                        search: {
+                            ...state.search,
+                            isSearching: false,
+                        },
+                    }))
+                },
+            }).catch((e: EverythingError) => {
+                console.error('Error searching', e)
+
+                set((state) => ({
+                    search: {
+                        ...state.search,
+                        isSearching: false,
+                        searchType: searchTypes.error,
+                        // searchResults: e,
+                    },
+                }))
             })
-            .catch((e: EverythingError) => {
-                error(e.name + ' ' + e.message)
-                set({ searchResults: e })
-                set({ searchType: searchTypes.error })
-                set({ isSearching: false })
-                throw e
-            })
-        // remove listener
-        isSearching.then((e) => e())
-        return result
+            return results
+        },
+        addToHistory: (query: string, searchType: searchTypes) => {
+            // set((state) => ({
+            //     previousQueries: [...state.previousQueries, { query, searchType }],
+            // }))
+            console.log('Adding to history')
+        },
+        addLatestToHistory: () => {
+            const query = get().search.searchQuery
+            const searchType = get().search.searchType
+            set((state) => ({
+                search: {
+                    ...state.search,
+                    previousQueries: [
+                        ...state.search.previousQueries,
+                        { query, searchType },
+                    ],
+                },
+            }))
+        },
     },
-    addToHistory: (query: string, searchType: searchTypes) => {
-        set((state) => ({
-            previousQueries: [...state.previousQueries, { query, searchType }],
-        }))
-    },
-    addLatestToHistory: () => {
-        const query = useSearchStore.getState().searchQuery
-        const searchType = useSearchStore.getState().searchType
-        set((state) => ({
-            previousQueries: [...state.previousQueries, { query, searchType }],
-        }))
-    },
-    openFile: async (path: string) => {
-        debug('Opening file: ' + path)
-
-        await invoke('open_link_js', { link: path })
-    },
-}))
+})

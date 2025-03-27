@@ -1,21 +1,55 @@
 @import 'tailwindcss';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+.test {
+    /* color: #cecdcb */
+    color: #e0dfdd;
+}
 @theme {
     /* light theme */
-    --color-primary: #dededb;
-    --color-secondary: #bfbfbc;
-    --color-accent: #71b2ee;
+    --color-primary: #cecdcb;
+    --color-secondary: #e0dfdd;
+    --color-accent: #4b84c4;
+    --color-accent-subtle: rgba(74, 131, 196, 0.25);
+
     --color-border: #fafafa;
     --color-text: #0f0f0f;
     --color-text-secondary: #535353;
     --color-text-tertiary: #8c8c8c;
 
     --color-shadow: hsla(0, 0%, 0%, 0.15);
-    --color-glow: hsla(0, 0%, 100%, 0.25);
+    --color-glow: hsla(0, 0%, 100%, 0.75);
+    --color-glow-secondary: hsla(0, 0%, 100%, 0.25);
 
     --color-selected: #7aa7d9;
     --color-hover: #bfd3eb;
     --color-selected-text: #ffffff;
+
+    /* lighten darken colours */
+    /* is theme dependent, get swapped in dark mode */
+    --color-li-10: rgba(255, 255, 255, 0.1);
+    --color-li-25: rgba(255, 255, 255, 0.25);
+    --color-li-50: rgba(255, 255, 255, 0.5);
+    --color-li-75: rgba(255, 255, 255, 0.75);
+    --color-li-90: rgba(255, 255, 255, 0.9);
+    --color-da-10: rgba(0, 0, 0, 0.1);
+    --color-da-25: rgba(0, 0, 0, 0.25);
+    --color-da-50: rgba(0, 0, 0, 0.5);
+    --color-da-75: rgba(0, 0, 0, 0.75);
+    --color-da-90: rgba(0, 0, 0, 0.9);
+
+    /* global light dark, won't change with theme */
+    --color-global-li-10: rgba(255, 255, 255, 0.1);
+    --color-global-li-25: rgba(255, 255, 255, 0.25);
+    --color-global-li-50: rgba(255, 255, 255, 0.5);
+    --color-global-li-75: rgba(255, 255, 255, 0.75);
+    --color-global-li-90: rgba(255, 255, 255, 0.9);
+    --color-global-da-10: rgba(0, 0, 0, 0.1);
+    --color-global-da-25: rgba(0, 0, 0, 0.25);
+    --color-global-da-50: rgba(0, 0, 0, 0.5);
+    --color-global-da-75: rgba(0, 0, 0, 0.75);
+    --color-global-da-90: rgba(0, 0, 0, 0.9);
 
     --animate-pulse: pulse 10s cubic-bezier(0.1, 0.4, 0.6, 1) infinite;
 }
@@ -23,18 +57,43 @@
 .dark {
     --color-selected: #496f9b;
     --color-primary: #1a1a1a;
-    --color-secondary: #535252;
-    --color-accent: #71b2ee;
+    --color-secondary: #302f2f;
+    --color-accent: #4b84c4;
+    --color-accent-subtle: rgba(74, 131, 196, 0.25);
+
     --color-border: #181818;
     --color-text: #c9c9c9;
-    --color-text-secondary: #acacac;
-    --color-text-tertiary: #b3b3b3;
-    --color-shadow: hsla(0, 0%, 100%, 0.0625);
+    --color-text-secondary: #9c9c9c;
+    --color-text-tertiary: #9b9b9b;
+    /* --color-shadow: hsla(0, 0%, 100%, 0.0625); */
     --color-glow: hsla(0, 0%, 100%, 0.25);
+    --color-glow-secondary: hsla(0, 0%, 100%, 0.125);
     --color-hover: #44576d;
+
+    --color-li-10: rgba(0, 0, 0, 0.1);
+    --color-li-25: rgba(0, 0, 0, 0.25);
+    --color-li-50: rgba(0, 0, 0, 0.5);
+    --color-li-75: rgba(0, 0, 0, 0.75);
+    --color-li-90: rgba(0, 0, 0, 0.9);
+    --color-da-10: rgba(255, 255, 255, 0.1);
+    --color-da-25: rgba(255, 255, 255, 0.25);
+    --color-da-50: rgba(255, 255, 255, 0.5);
+    --color-da-75: rgba(255, 255, 255, 0.75);
+    --color-da-90: rgba(255, 255, 255, 0.9);
 }
 .drop-shadow {
     filter: drop-shadow(0 0 0.5em var(--color-shadow));
+    color: rgba(74, 131, 196, 0.5);
+}
+
+:root {
+    font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 400;
+
+    color: #0f0f0f;
+    background-color: transparent;
 }
 
 .text-primary {
@@ -43,9 +102,54 @@
 .text-secondary {
     @apply text-text-secondary;
 }
-.fade-text-right {
+
+/* fade sides */
+.fade-right {
     --fade-start: 90%;
     mask-image: linear-gradient(to right, white var(--fade-start), transparent);
+}
+.fade-left {
+    --fade-start: 90%;
+    mask-image: linear-gradient(to left, white var(--fade-start), transparent);
+}
+
+.fade-x {
+    mask-image: linear-gradient(to right, transparent, white 50%, transparent);
+}
+
+.fade-bottom {
+    --fade-start: 0%;
+    --fade-end: 90%;
+    mask-image: linear-gradient(
+        to bottom,
+        transparent,
+        white var(--fade-start),
+        white var(--fade-end),
+        transparent
+    );
+}
+.fade-top {
+    --fade-start: 10%;
+    --fade-end: 100%;
+    mask-image: linear-gradient(
+        to bottom,
+        transparent,
+        white var(--fade-start),
+        white var(--fade-end),
+        transparent
+    );
+}
+
+.fade-y {
+    --fade-start: 10%;
+    --fade-end: 90%;
+    mask-image: linear-gradient(
+        to bottom,
+        transparent,
+        rgb(0, 0, 0) var(--fade-start),
+        rgb(0, 0, 0) var(--fade-end),
+        transparent
+    );
 }
 
 @keyframes fadeIn {
@@ -94,5 +198,3 @@
     animation: searchFadeIn 10s cubic-bezier(0.32, 0, 0.67, 0) forwards;
     transition: all;
 }
-
-@custom-variant dark (&:where(.dark, .dark *));

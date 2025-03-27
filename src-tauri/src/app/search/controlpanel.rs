@@ -1,7 +1,7 @@
 use phf::phf_map;
 use phf::phf_set;
 use std::collections::HashMap;
-
+use everything_sdk::EverythingError;
 use crate::app::types::search::ControlPanelResult;
 
 // This is a map of search terms to the corresponding control panel settings.
@@ -29,11 +29,11 @@ static SETTINGS: phf::Map<&'static str, &'static str> = phf_map! {
     "Control Panel" => "control",
 };
 
-pub fn search(query: String) -> Vec<ControlPanelResult> {
+pub fn search(query: String) -> std::result::Result<Vec<ControlPanelResult>, EverythingError> {
     let mut result: Vec<ControlPanelResult> = Vec::new();
     let query = query.to_lowercase();
-    if query.len() < 2 {
-        return result;
+    if query.len() < 1 {
+        return Err(EverythingError::InvalidCall);
     }
     let keys = SETTINGS.keys();
 
@@ -57,5 +57,5 @@ pub fn search(query: String) -> Vec<ControlPanelResult> {
         }
     }
 
-    result
+    Ok(result)
 }

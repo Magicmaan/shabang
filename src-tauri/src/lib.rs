@@ -6,15 +6,16 @@ use tauri::Manager;
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 use tauri::{AppHandle, Emitter};
 use tauri_plugin_global_shortcut::{Code, Modifiers, Shortcut, ShortcutState};
+use tauri_plugin_positioner::*;
 
 use app::api::javascript::{
-    close_window, get_blur_js, open_link_js, open_window, search_js, set_blur_js,
+    close_window, get_blur, open_link, open_window, search, set_blur,
 };
 use app::setup::check_install;
 use app::shortcut::make_shortcut;
-use window_vibrancy::{apply_blur, apply_vibrancy, NSVisualEffectMaterial};
 use elevated_command::Command;
 use std::process::Command as StdCommand;
+use window_vibrancy::{apply_blur, apply_vibrancy, NSVisualEffectMaterial};
 
 // Define BlurStyle type
 pub enum BlurStyle {
@@ -40,21 +41,20 @@ pub struct AppState {
 fn start_everything() {
     //start everything in tray / background
     // only start if no instanceRR
-    
+
     let mut command = StdCommand::new("C:\\Program Files\\Everything\\Everything.exe");
     command.arg("-close");
     command.arg("-first-instance");
-    command.spawn()
-        .expect("Everything failed to start");
+    command.spawn().expect("Everything failed to start");
     // command.arg("install").arg("everything").arg("-y");
     // let output = command.output().unwrap();
     println!("Everything started");
-
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_positioner::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_log::Builder::new().build())
         .setup(|app| {
@@ -65,6 +65,16 @@ pub fn run() {
                 use tauri_plugin_global_shortcut::{
                     Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState,
                 };
+
+
+
+             
+                tauri::tray::TrayIconBuilder::new()
+                    .on_tray_icon_event(|tray_handle, event| {
+                        tauri_plugin_positioner::on_tray_event(tray_handle.app_handle(), &event);
+                    })
+                      .build(app)?;
+             
                 let window = app.get_webview_window("main").unwrap();
 
                 //setup app
@@ -73,7 +83,6 @@ pub fn run() {
                 //start app
                 start_everything();
 
-
                 //create state
                 app.manage(Mutex::new(AppState::default()));
 
@@ -81,7 +90,6 @@ pub fn run() {
                 // let state = app.state::<Mutex<AppState>>();
                 // let mut state = state.lock().unwrap();
                 // state.use_blur = true;
-
                 let shortcuts = app::settings::shortcuts::Shortcuts::new();
                 // create open / close shortcut
                 match make_shortcut(
@@ -115,11 +123,11 @@ pub fn run() {
         .plugin(tauri_plugin_log::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
             open_window,
-            search_js,
+            search,
             close_window,
-            open_link_js,
-            set_blur_js,
-            get_blur_js
+            open_link,
+            set_blur,
+            get_blur
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

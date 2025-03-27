@@ -1,10 +1,10 @@
-use tauri_plugin_shell::{Shell, ShellExt};
 use tauri::{EventLoopMessage, Manager, Wry};
+use tauri_plugin_shell::{Shell, ShellExt};
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-use tauri::{AppHandle, Emitter};
-use tauri_plugin_global_shortcut::{Code, Modifiers, Shortcut, ShortcutState};
-use tauri_plugin_fs::FsExt;
 use std::path::Path;
+use tauri::{AppHandle, Emitter};
+use tauri_plugin_fs::FsExt;
+use tauri_plugin_global_shortcut::{Code, Modifiers, Shortcut, ShortcutState};
 
 use elevated_command::Command;
 use std::process::Command as StdCommand;
@@ -15,23 +15,35 @@ pub fn install_chocolatey(shell: &Shell<Wry>) -> Result<bool, String> {
     let install_command = tauri::async_runtime::block_on(async move {
         shell
             .command("winget")
-            .args(["install", "--id", "chocolatey.chocolatey", "--source", "winget", "--version", "2.4.3.0"])
+            .args([
+                "install",
+                "--id",
+                "chocolatey.chocolatey",
+                "--source",
+                "winget",
+                "--version",
+                "2.4.3.0",
+            ])
             .output()
             .await
     });
 
     // check the commands status with match
     match install_command {
-        Ok(output) => { // if ok, check is success. (this can still be an error though)
-            if output.status.success() { // if success, print success message and return true
+        Ok(output) => {
+            // if ok, check is success. (this can still be an error though)
+            if output.status.success() {
+                // if success, print success message and return true
                 println!("Chocolatey installed successfully");
                 Ok(true)
-            } else { // if not success, print error message and return false
+            } else {
+                // if not success, print error message and return false
                 println!("Failed to install Chocolatey");
                 Err(String::from_utf8_lossy(&output.stderr).to_string())
             }
         }
-        Err(e) => { // if error, print error message and return false
+        Err(e) => {
+            // if error, print error message and return false
             println!("Error: {}", e);
             Err(e.to_string())
         }
@@ -40,7 +52,6 @@ pub fn install_chocolatey(shell: &Shell<Wry>) -> Result<bool, String> {
 
 pub fn install_everything(shell: &Shell<Wry>) -> Result<bool, String> {
     // https://community.chocolatey.org/packages/Everything
-
 
     //get elevated shell, needed for installs
     // enter powershell -> make elevated powershell process -> run choco install everything
@@ -69,16 +80,12 @@ pub fn install_everything(shell: &Shell<Wry>) -> Result<bool, String> {
     }
 }
 
-
 fn check_and_install_chocolatey(shell: &Shell<Wry>) -> Result<bool, String> {
     // check if chocolatey is installed
-    let choco_installed = tauri::async_runtime::block_on(async move {
-        shell
-            .command("choco")
-            .output()
-            .await
-            .is_ok()
-    });
+    let choco_installed =
+        tauri::async_runtime::block_on(
+            async move { shell.command("choco").output().await.is_ok() },
+        );
 
     // if chocolatey is not installed, install it
     if !choco_installed {
@@ -87,16 +94,15 @@ fn check_and_install_chocolatey(shell: &Shell<Wry>) -> Result<bool, String> {
             Ok(_) => {
                 println!("Chocolatey installation succeeded.");
                 return Ok(true);
-            
-            },
+            }
             Err(e) => {
-                println!("Chocolatey installation failed: {}", e); 
+                println!("Chocolatey installation failed: {}", e);
 
                 return Err(e);
-            },
+            }
         }
-    } 
-    
+    }
+
     Ok(true)
 }
 
@@ -110,11 +116,11 @@ fn check_and_install_everything(shell: &Shell<Wry>) -> Result<bool, String> {
             Ok(_) => {
                 println!("Everything installation succeeded.");
                 return Ok(true);
-            },
+            }
             Err(e) => {
                 println!("Everything installation failed: {}", e);
                 return Err(e);
-            },
+            }
         }
     }
     // check if everything is installed
@@ -126,19 +132,13 @@ fn check_and_install_everything(shell: &Shell<Wry>) -> Result<bool, String> {
 
 pub fn check_install(app_handle: AppHandle) -> bool {
     let shell = app_handle.shell();
-    
+
     // test for chocolatey
     check_and_install_chocolatey(&shell).unwrap();
 
     // check for everything
     check_and_install_everything(&shell).unwrap();
 
-
-
     // if everything is not installed, install it
     return true;
 }
-
-
-
-

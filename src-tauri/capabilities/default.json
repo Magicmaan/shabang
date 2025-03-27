@@ -15,6 +15,11 @@
         "shell:allow-execute",
         "shell:allow-kill",
         "shell:allow-spawn",
-        "shell:allow-stdin-write"
+        "shell:allow-stdin-write",
+        "positioner:default",
+        "core:window:allow-set-size",
+        "core:window:allow-set-min-size",
+        "core:window:allow-set-max-size",
+        "core:window:allow-set-position"
     ]
 }

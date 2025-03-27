@@ -11,7 +11,7 @@ interface State {
 export const useOpenWindow = () => {
     const [windowOpenState, _setWindowOpenState] = useState<
         'open' | 'closed' | 'closing' | 'opening'
-    >('closed')
+    >('open')
 
     // wrapper so that setting outside of this hook is not possible
     const setWindowOpenState = (state: 'open' | 'closed') => {
