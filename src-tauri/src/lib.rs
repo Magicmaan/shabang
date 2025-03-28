@@ -7,7 +7,7 @@ use tauri::Manager;
 use tauri::{AppHandle, Emitter};
 use tauri_plugin_global_shortcut::{Code, Modifiers, Shortcut, ShortcutState};
 use tauri_plugin_positioner::*;
-
+use tauri_plugin_fs::*;
 use app::api::javascript::{
     close_window, get_blur, open_link, open_window, search, set_blur,
 };
@@ -41,7 +41,6 @@ pub struct AppState {
 fn start_everything() {
     //start everything in tray / background
     // only start if no instanceRR
-
     let mut command = StdCommand::new("C:\\Program Files\\Everything\\Everything.exe");
     command.arg("-close");
     command.arg("-first-instance");
@@ -51,12 +50,15 @@ fn start_everything() {
     println!("Everything started");
 }
 
+
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_positioner::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_log::Builder::new().build())
+        .plugin(tauri_plugin_fs::init())
         .setup(|app| {
             let handler = app.handle().clone();
             #[cfg(desktop)]

@@ -20,6 +20,10 @@
         "core:window:allow-set-size",
         "core:window:allow-set-min-size",
         "core:window:allow-set-max-size",
-        "core:window:allow-set-position"
+        "core:window:allow-set-position",
+        "fs:allow-app-read",
+        "fs:allow-picture-read",
+        "fs:allow-picture-meta",
+        "fs:allow-picture-read-recursive"
     ]
 }

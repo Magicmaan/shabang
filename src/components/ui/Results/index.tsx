@@ -55,17 +55,9 @@ const ResultsContainer = () => {
     let searchType = useAppStore((state) => state.search.searchType)
     let searchResult = useAppStore((state) => state.search.searchResults)
 
-    // if searchType is error set error to true
-    // replace searchResult with empty array
-    useEffect(() => {
-        // if (searchType === 'error') {
-        //     setIsError(true)
-        //     error.current = searchResult as EverythingError
-        //     // searchResult = { everything: [], controlpanel: [], application: [] }
-        // } else {
-        //     setIsError(false)
-        // }
-    }, [searchType])
+    const [currentTab, setCurrentTab] = useState<
+        '*' | 'files' | 'apps' | 'settings' | 'calculator'
+    >('*')
 
     const [selectedKey, setSelectedKey] = useState<number | null>(-1)
     const listRef = useRef<HTMLUListElement>(null)
@@ -151,9 +143,7 @@ const ResultsContainer = () => {
         if (results instanceof EverythingError) {
             return
         }
-        if (!results.everything && !results.controlpanel) {
-            return []
-        }
+
         let i = 0
         return [
             results.controlpanel?.map((search: ControlPanelData) => {
@@ -163,6 +153,17 @@ const ResultsContainer = () => {
                             result={search}
                             selected={selectedKey || 0}
                             index={i}
+                        />
+                    </li>
+                )
+            }),
+            results.application?.map((search: ApplicationData) => {
+                return (
+                    <li index={i++}>
+                        <AppResult
+                            result={search}
+                            index={i}
+                            selected={selectedKey || 0}
                         />
                     </li>
                 )
@@ -252,6 +253,10 @@ const ResultsContainer = () => {
     // get height of search results
     // depends on the amount of results
     const maxHeight = useMemo(() => {
+        if (currentTab === 'calculator') {
+            return 'max-h-96 h-auto min-h-48'
+        }
+
         if (!mergedFormattedResults) {
             return 'max-h-48 h-48 min-h-48'
         }
@@ -263,15 +268,13 @@ const ResultsContainer = () => {
         if (isSearching) {
             return 'max-h-48 h-48 min-h-48'
         } else {
-            if (mergedFormattedResults.length < 4) {
-                return 'max-h-48 h-48 min-h-48'
-            } else if (mergedFormattedResults.length < 6) {
+            if (mergedFormattedResults.length < 6) {
                 return 'max-h-64 h-64 min-h-64'
             } else {
-                return 'max-h-96 h-64 min-h-96'
+                return 'max-h-96 h-96 min-h-96'
             }
         }
-    }, [isSearching, mergedFormattedResults, isError])
+    }, [isSearching, mergedFormattedResults, isError, currentTab])
 
     return (
         <ContextMenuProvider>
@@ -280,11 +283,14 @@ const ResultsContainer = () => {
                 data-error={isError}
                 className={`flex ${maxHeight} transition-height h-auto w-auto flex-col gap-1 overflow-hidden transition-all duration-500 ease-in-out`}
             >
-                {/* <SettingBar /> */}
-
                 <Tabs
                     defaultValue="*"
                     className="h-full w-full overflow-hidden"
+                    onValueChange={(value) => {
+                        setCurrentTab(value)
+                        console.log('currentTab: ', currentTab)
+                        setSelectedKey(-1)
+                    }}
                 >
                     <TabList>
                         <TabTriggers value="*">
@@ -316,6 +322,11 @@ const ResultsContainer = () => {
                                 {resultsAmounts.settings}
                             </div>
                             <ContextMenu title="Settings" />
+                        </TabTriggers>
+                        <TabTriggers value="calculator">
+                            <p className="text-text">Calculator</p>
+
+                            <ContextMenu title="Calculator" />
                         </TabTriggers>
 
                         <div className="flex w-full justify-end" />
@@ -366,6 +377,9 @@ const ResultsContainer = () => {
                     </TabContent>
                     <TabContent value="settings">
                         {formattedResults?.controlPanel}
+                    </TabContent>
+                    <TabContent value="calculator">
+                        <CalculatorResult />
                     </TabContent>
                 </Tabs>
             </Panel>

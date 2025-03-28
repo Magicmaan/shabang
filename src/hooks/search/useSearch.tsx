@@ -2,7 +2,7 @@ import { invoke, Channel } from '@tauri-apps/api/core'
 import { debug, error } from '@tauri-apps/plugin-log'
 import { create, StateCreator } from 'zustand'
 import * as math from 'mathjs'
-import { getSearchType } from './searchType'
+import { identifySearchType } from './searchType'
 import {
     ApplicationData,
     ControlPanelData,
@@ -16,6 +16,7 @@ import { listen } from '@tauri-apps/api/event'
 import { getBang } from './Bangs'
 
 import { search } from '@/backend/command'
+import { getMath } from './math'
 
 type State = {
     searchQuery: string
@@ -91,10 +92,7 @@ export const createSearchSlice: StateCreator<
             let searchType = searchTypes.file
             // identify bangs
 
-            // console.log('query before bang', query)
-
             const bangResult = getBang(_query)
-
             if (bangResult) {
                 const b = bangResult[0]
                 query = bangResult[1]
@@ -117,9 +115,25 @@ export const createSearchSlice: StateCreator<
                 }))
             } else {
                 // if no bangs found, search
-                const { searchType: st, query: q } = getSearchType(_query)
+                const { searchType: st, query: q } = identifySearchType(_query)
                 searchType = st
                 query = q
+            }
+
+            const mathResult = getMath(query)
+            if (mathResult) {
+                console.log('Math result found')
+                results.calculator = mathResult
+                set((state) => ({
+                    ...state,
+                    search: {
+                        ...state.search,
+                        searchResults: {
+                            ...state.search.searchResults,
+                            calculator: mathResult,
+                        },
+                    },
+                }))
             }
 
             // add new query to store

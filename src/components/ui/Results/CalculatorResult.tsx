@@ -5,6 +5,7 @@ import { debug } from '@tauri-apps/plugin-log'
 
 import { toRelativeStr } from '../../../util/time'
 import { useAppStore } from '@/hooks/useApp'
+import Desmos from '@/components/desmos'
 
 interface PreviousEquationProps {
     query: string
@@ -44,13 +45,15 @@ export const CalculatorResult = () => {
 
     debug('Previous Queries: ' + previousQueries)
     return (
-        <div className="equation-list flex min-h-64 w-full flex-col items-start justify-start gap-1 p-1">
+        <div className="equation-list flex h-auto min-h-64 w-full flex-col items-start justify-start gap-1 p-1">
             {previousQueries.map((query, index) => (
                 <PreviousEquation query={query} index={index} />
             ))}
             <PreviousEquation query={'51 + 9 = 60'} />
             <PreviousEquation query={'21 / 2 = 60'} />
             <PreviousEquation query={'21 / 2 = 60'} />
+
+            <Desmos />
         </div>
     )
 }

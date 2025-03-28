@@ -6,11 +6,21 @@ const Tabs: React.FC<{
     defaultValue: string
     children: React.ReactNode
     className?: string
-}> = ({ defaultValue = 'default', children, className }) => {
+    value?: string
+    onValueChange?: (value: string) => void
+}> = ({
+    defaultValue = 'default',
+    children,
+    className,
+    value,
+    onValueChange,
+}) => {
     return (
         <radixTabs.Root
             className={`group/tabs flex flex-col items-start justify-start transition-all duration-500 ${className} `}
             defaultValue={defaultValue}
+            value={value}
+            onValueChange={onValueChange}
         >
             {children}
         </radixTabs.Root>

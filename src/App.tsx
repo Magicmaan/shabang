@@ -134,9 +134,6 @@ function App() {
                 >
                     Toggle theme
                 </button>
-                <div className="absolute h-auto w-auto">
-                    <Desmos />
-                </div>
             </QueryClientProvider>
         </main>
     )

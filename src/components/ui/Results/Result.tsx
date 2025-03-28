@@ -9,7 +9,14 @@ import {
     Icon,
 } from 'lucide-react'
 import { LucideIcon } from 'lucide-react'
-import { useCallback, useMemo, useRef } from 'react'
+import {
+    Suspense,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react'
 import { createSearchSlice } from '../../../hooks/search/useSearch'
 import { openPath } from '@tauri-apps/plugin-opener'
 import { invoke } from '@tauri-apps/api/core'
@@ -29,6 +36,8 @@ import { open } from '@/backend/command'
 import { bangAction } from '@/hooks/search/Bangs'
 import { useAppStore } from '@/hooks/useApp'
 import { cva } from 'class-variance-authority'
+import { readFile, BaseDirectory } from '@tauri-apps/plugin-fs'
+import * as path from '@tauri-apps/api/path'
 
 const ResultStyles = cva(
     `group flex w-full flex-row overflow-hidden rounded-md  transition-all duration-300 hover:cursor-pointer
@@ -93,7 +102,7 @@ type ResultProps = {
     mainTextRight?: string
     subTextRight?: string
 
-    Icon?: LucideIcon
+    Icon?: LucideIcon | string
     IconProps?: React.SVGProps<SVGSVGElement>
     type: 'file' | 'setting' | 'app'
     selected?: number
@@ -102,6 +111,7 @@ type ResultProps = {
         path?: string
     }
     className?: string
+    ref?: React.Ref<HTMLDivElement>
 }
 
 const Result = ({
@@ -116,9 +126,9 @@ const Result = ({
     className,
     selected,
     index,
+    ref,
 }: ResultProps) => {
     if (!Icon) Icon = fileIcons.default
-    const ref = useRef<HTMLDivElement>(null)
 
     return (
         <>
@@ -143,13 +153,22 @@ const Result = ({
                     }}
                 >
                     <div className="bg-da-10 icon-container flex aspect-square h-auto w-auto items-center justify-center p-1">
-                        <Icon
-                            absoluteStrokeWidth
-                            strokeWidth={2}
-                            className="stroke-text-secondary aspect-square"
-                            {...IconProps}
-                        />
+                        {Icon && typeof Icon === 'string' ? (
+                            <img
+                                src={Icon}
+                                alt="Icon"
+                                className="rounded-sm object-contain"
+                            />
+                        ) : (
+                            <Icon
+                                absoluteStrokeWidth
+                                strokeWidth={2}
+                                className="stroke-text-secondary aspect-square"
+                                {...IconProps}
+                            />
+                        )}
                     </div>
+
                     <div
                         className="flex h-auto w-full flex-col overflow-hidden text-wrap"
                         title={mainText}
@@ -187,10 +206,14 @@ export const FileResult = ({
     selected,
     index,
 }: {
-    result: ApplicationData
+    result: EverythingData
     selected: number
     index: number
 }) => {
+    const ref = useRef<HTMLDivElement>(null)
+
+    const [imgSrc, setImgSrc] = useState<string | null>(null)
+
     const filePath = useMemo(() => {
         let filePath = result.path.split('\\').slice(0, -1).join('\\')
 
@@ -207,18 +230,61 @@ export const FileResult = ({
 
     const icon =
         fileIcons[result.path.split('.').pop()?.toLowerCase() || 'default']
+
+    async function getImage() {
+        if (result.path.endsWith('.jpg')) {
+            const home = await path.pictureDir()
+            console.log('Home Directory:', home)
+
+            const contents = await readFile(await path.join(home, 'Harold.jpg'))
+            const blob = new Blob([contents], { type: 'image/jpg' })
+            const url = URL.createObjectURL(blob)
+
+            console.log('Blob URL:', url)
+            return url
+        }
+        return null
+    }
+
+    useEffect(() => {
+        const image = getImage().then((url) => {
+            console.log('Image URL:', url)
+            if (url) {
+                setImgSrc(url)
+
+                const img = new Image()
+                img.src = url
+                img.onload = () => {
+                    console.log('Image loaded:', img)
+                }
+
+                img.onerror = (error) => {
+                    console.error('Error loading image:', error)
+                }
+
+                img.className = 'w-10 h-10'
+
+                ref.current?.appendChild(img)
+                console.log('Image:', img)
+            }
+        })
+    }, [filePath])
+
     return (
-        <Result
-            index={index}
-            selected={selected}
-            mainText={result.readable_name}
-            subText={filePath}
-            Icon={icon}
-            data={{
-                path: result.path,
-            }}
-            type="file"
-        />
+        <>
+            <Result
+                ref={ref}
+                index={index}
+                selected={selected}
+                mainText={result.readable_name}
+                subText={filePath}
+                Icon={imgSrc ?? icon}
+                data={{
+                    path: result.path,
+                }}
+                type="file"
+            />
+        </>
     )
 }
 

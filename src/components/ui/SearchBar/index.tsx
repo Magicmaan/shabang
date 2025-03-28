@@ -54,9 +54,6 @@ const SearchBar = () => {
         if (searchQuery.trim() === '') {
             return 'Search...'
         } else {
-            if (searchType === 'error') {
-                return ''
-            }
             const result = searchResults as searchResults
 
             if (result.bang) {
@@ -64,12 +61,12 @@ const SearchBar = () => {
                 return fill + result.bang.description
             }
 
-            if (searchType === 'calculator') {
+            if (searchType === 'calculator' && result.calculator) {
                 let fill = searchQuery.replace(/^ /, '\u00A0')
                 if (fill.endsWith('=')) {
                     fill = fill.replace('=', '')
                 }
-                return fill + ' = ' + result.calculator
+                return fill + ' = ' + result.calculator.result
             } else {
                 return searchQuery.replace(/^ /, '\u00A0')
             }
@@ -150,7 +147,6 @@ const SearchBar = () => {
                 console.log('searching action')
                 if (searchResults) {
                     const result = searchResults as searchResults
-
                     setIsSearching(false)
                     // check if bang is present in search results
                     if (result.bang?.action) {

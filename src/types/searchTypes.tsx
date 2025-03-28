@@ -49,11 +49,22 @@ export type BangData = {
     url: string
 }
 
+// math type defines the type of math
+// simple math is a single number or a simple operation (+,-,*,/)
+// complex math is a more complex operation (sin, cos, tan, log, etc.)
+export type MathType = 'simple' | 'complex'
+
+export type MathData = {
+    equation: string
+    result: string
+    type: MathType
+}
+
 export type searchResults = {
     everything?: EverythingData[]
     controlpanel?: ControlPanelData[]
     application?: ApplicationData[]
-    calculator?: string
+    calculator?: MathData
     internet?: InternetData
     bang?: bangAction
 }

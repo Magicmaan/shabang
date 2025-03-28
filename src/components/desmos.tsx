@@ -26,7 +26,7 @@ const Desmos = () => {
     }, [])
 
     return (
-        <div className="absolute h-auto w-auto bg-red-500 p-1">
+        <div className="h-auto w-auto bg-red-500 p-1">
             <GraphingCalculator
                 ref={ref}
                 attributes={{ className: 'w-96 h-96 bg-red-200 p-1' }}
