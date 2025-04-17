@@ -44,7 +44,10 @@ export interface bangAction {
 
 const defaultWebAction = (query: string, action: string) => {
     const url = action.replace('${query}', query)
-    open(url)
+    open({
+        path: url,
+        mode: 'web',
+    })
     return true
 }
 

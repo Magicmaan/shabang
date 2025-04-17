@@ -20,7 +20,7 @@ export const ContextMenuProvider = ({
 }) => {
     return (
         <ContextMenuPrimitive>
-            <ContextMenuTrigger>Right click</ContextMenuTrigger>
+            {/* <ContextMenuTrigger>Right click</ContextMenuTrigger> */}
             {children}
         </ContextMenuPrimitive>
     )

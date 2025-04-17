@@ -80,8 +80,13 @@ async function search({
     return results
 }
 
-function open(path: string) {
-    invoke('open_link', { link: path })
+interface OpenProps {
+    path: string
+    mode?: 'default' | 'explorer' | 'terminal' | 'default_program' | 'web'
+}
+
+function open({ path, mode = 'default' }: OpenProps) {
+    invoke('open_link', { link: path, mode: mode })
 }
 
 export { search, open }

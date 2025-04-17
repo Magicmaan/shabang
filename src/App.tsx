@@ -17,11 +17,14 @@ import {
     getCurrentWindow,
     LogicalSize,
     currentMonitor,
+    Effect,
+    EffectState,
 } from '@tauri-apps/api/window'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import Desmos from './components/desmos.tsx'
 import { useAppStore } from './hooks/useApp.tsx'
-
+import { exit, relaunch } from '@tauri-apps/plugin-process'
+import Layout from './components/ui/layout.tsx'
 const queryClient = new QueryClient()
 
 function App() {
@@ -46,9 +49,10 @@ function App() {
     disableCtrlF()
 
     async function toggleBlur() {
+        console.log('Toggling blur')
         setWindowBlurred(!windowBlurred)
+        // await relaunch()
     }
-
     // debug("search from app.tsx: " + store.searchQuery);
     useEffect(() => {
         const handlePointerDown = (e: PointerEvent) => {
@@ -72,6 +76,13 @@ function App() {
             handlePointerDown
         )
         ref.current?.addEventListener('pointerdown', handlePointerDown)
+
+        window.setEffects({
+            effects: [Effect.Blur],
+            state: EffectState.Active,
+            radius: 10,
+            color: '#25ff111e',
+        })
         return () => {
             document.removeEventListener('keydown', handleEscape)
             ref.current?.parentElement?.removeEventListener(
@@ -101,29 +112,7 @@ function App() {
             }`}
         >
             <QueryClientProvider client={queryClient}>
-                <div className="pointer-events-none flex h-full w-full origin-top flex-row items-stretch justify-center gap-2.5">
-                    <div className="flex h-full w-1/3 items-start justify-end">
-                        <div className="flex h-full w-auto flex-col items-center justify-between gap-2.5">
-                            <QuickWidgets />
-                            <Widget
-                                className=""
-                                onPointerDown={() =>
-                                    setTheme((prev) =>
-                                        prev === 'light' ? 'dark' : 'light'
-                                    )
-                                }
-                            >
-                                g
-                            </Widget>
-                        </div>
-                    </div>
-                    <div className="pointer-events-auto flex h-max w-1/3 min-w-[36rem] flex-col items-stretch justify-stretch gap-2.5">
-                        <SearchBar />
-                        <ResultsContainer />
-                    </div>
-
-                    <div className="h-full w-1/3">g</div>
-                </div>
+                <Layout />
                 <button
                     className="pointer-events-auto bg-red-500"
                     onClick={() =>
@@ -133,6 +122,12 @@ function App() {
                     }
                 >
                     Toggle theme
+                </button>
+                <button
+                    className="pointer-events-auto bg-red-500"
+                    onClick={toggleBlur}
+                >
+                    Toggle blur
                 </button>
             </QueryClientProvider>
         </main>

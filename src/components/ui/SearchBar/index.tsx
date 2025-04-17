@@ -16,8 +16,40 @@ import {
 } from '@/types/searchTypes'
 import { useAppStore } from '@/hooks/useApp.tsx'
 import { useDebounce, useThrottle, useTimeout } from 'react-use'
+import { cva } from 'class-variance-authority'
+import { cn } from '@/lib/utils.ts'
 
-const SearchBar = () => {
+const SearchBarStyles = cva('h-12 border-2', {
+    variants: {
+        variant: {
+            default: 'border-2',
+            small: 'border-0',
+            large: 'border-4',
+        },
+
+        borderBottom: {
+            true: 'border-b-2',
+            false: 'border-b-none',
+        },
+        borderTop: {
+            true: 'border-t-2',
+            false: 'border-t-none',
+        },
+    },
+    defaultVariants: {
+        variant: 'default',
+        borderBottom: true,
+        borderTop: true,
+    },
+})
+
+interface SearchBarProps {
+    borderBottom?: boolean
+    borderTop?: boolean
+    variant?: 'default' | 'small' | 'large'
+}
+
+const SearchBar = ({ borderTop, borderBottom }: SearchBarProps) => {
     const { windowOpenState } = useOpenWindow()
     const [isSearching, setIsSearching] = useState(false)
     const [debounceSearch, setDebounceSearch] = useState(false)
@@ -218,7 +250,14 @@ const SearchBar = () => {
 
     return (
         <Panel
-            className={`h-12 border-2 ${isSearching ? 'rainbow-border' : ''} `}
+            className={cn(
+                SearchBarStyles({
+                    variant: 'default',
+                    borderTop: borderTop,
+                    borderBottom: borderBottom,
+                }),
+                `${isSearching ? 'rainbow-border' : ''} `
+            )}
             data-searching={isSearching}
         >
             <div className="absolute top-0 left-0 -z-10 flex h-full w-full items-center p-2">

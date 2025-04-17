@@ -45,13 +45,38 @@ import Button from '../base/button'
 import Divider from '../base/divider'
 
 import { gsap } from 'gsap'
+import ScrollList from '../base/ScrollList'
+
+import { cva } from 'class-variance-authority'
+import { cn } from '@/lib/utils'
+
+const ResultsStyle = cva(
+    `transition-height flex h-auto max-h-full w-auto flex-col gap-1 overflow-hidden transition-all duration-500 ease-in-out`,
+    {
+        variants: {
+            error: {
+                true: 'bg-red-500',
+                false: '',
+            },
+
+            gap: {
+                true: 'gap-2',
+                false: 'gap-0', // TODO
+            },
+        },
+        defaultVariants: {
+            error: false,
+            gap: true,
+        },
+    }
+)
 
 const ResultsContainer = () => {
     const ref = useRef<HTMLDivElement>(null)
     const [isError, setIsError] = useState(false)
     const error = useRef<EverythingError | Error | null>(null)
     const isSearching = useAppStore((state) => state.search.isSearching)
-    const isArrowDown = useRef(false)
+
     let searchType = useAppStore((state) => state.search.searchType)
     let searchResult = useAppStore((state) => state.search.searchResults)
 
@@ -59,7 +84,7 @@ const ResultsContainer = () => {
         '*' | 'files' | 'apps' | 'settings' | 'calculator'
     >('*')
 
-    const [selectedKey, setSelectedKey] = useState<number | null>(-1)
+    const [selectedKey, setSelectedKey] = useState<number | null>(null)
     const listRef = useRef<HTMLUListElement>(null)
 
     const [showSearchSettings, setShowSearchSettings] = useState(false)
@@ -78,8 +103,9 @@ const ResultsContainer = () => {
         }
     }, [results])
 
+    // set selected to none on results refresh
     useEffect(() => {
-        setSelectedKey(-1)
+        setSelectedKey(null)
     }, [results])
 
     console.log('results: ', results)
@@ -182,6 +208,7 @@ const ResultsContainer = () => {
         ].flat()
     }, [results, selectedKey])
 
+    // animation
     useLayoutEffect(() => {
         const list = listRef
 
@@ -214,40 +241,6 @@ const ResultsContainer = () => {
         }
     }, [results])
 
-    useEffect(() => {
-        // arrow key movement
-        // short press = 0.25
-        // long press = 1
-        const onKeyDown = (e: KeyboardEvent) => {
-            let increment = 0.25
-            if (!isArrowDown.current) {
-                increment = 1
-                isArrowDown.current = true
-            }
-
-            //TODO: scroll to selected key and make feel better
-            if (e.key === 'ArrowDown' || e.key === 'PageDown') {
-                setSelectedKey((prev) => {
-                    return prev ? prev + increment : 1
-                })
-            }
-            if (e.key === 'ArrowUp' || e.key === 'PageUp') {
-                setSelectedKey((prev) => {
-                    return prev ? prev - increment : 1
-                })
-            }
-        }
-        const onKeyUp = (e: KeyboardEvent) => {
-            isArrowDown.current = false
-        }
-        window.addEventListener('keydown', onKeyDown)
-        window.addEventListener('keyup', onKeyUp)
-        return () => {
-            window.removeEventListener('keydown', onKeyDown)
-            window.removeEventListener('keyup', onKeyUp)
-        }
-    }, [])
-
     const bang = results.bang
 
     // get height of search results
@@ -277,19 +270,19 @@ const ResultsContainer = () => {
     }, [isSearching, mergedFormattedResults, isError, currentTab])
 
     return (
-        <ContextMenuProvider>
-            <Panel
-                ref={ref}
-                data-error={isError}
-                className={`flex ${maxHeight} transition-height h-auto w-auto flex-col gap-1 overflow-hidden transition-all duration-500 ease-in-out`}
-            >
+        <Panel
+            ref={ref}
+            data-error={isError}
+            className={ResultsStyle({ error: isError, gap: true })}
+        >
+            <ContextMenuProvider>
                 <Tabs
                     defaultValue="*"
                     className="h-full w-full overflow-hidden"
                     onValueChange={(value) => {
-                        setCurrentTab(value)
+                        setCurrentTab(value as any)
                         console.log('currentTab: ', currentTab)
-                        setSelectedKey(-1)
+                        setSelectedKey(null)
                     }}
                 >
                     <TabList>
@@ -356,18 +349,21 @@ const ResultsContainer = () => {
                     <SettingBar visible={showSearchSettings} />
                     <Divider />
 
-                    <TabContent value="*">
-                        <ul
+                    <TabContent
+                        value="*"
+                        className={`${maxHeight} overflow-hidden`}
+                    >
+                        <div className="flex flex-col gap-1">
+                            {formattedResults?.bang}
+                        </div>
+                        <ScrollList
                             ref={listRef}
-                            aria-hidden={isSearching}
-                            aria-disabled={isSearching}
-                            className={`mt-1 ease-in-out aria-hidden:opacity-0`}
+                            className={`${maxHeight}`}
+                            selected={selectedKey}
+                            setSelected={setSelectedKey}
                         >
-                            <div className="flex flex-col gap-1">
-                                {formattedResults?.bang}
-                            </div>
                             {mergedFormattedResults}
-                        </ul>
+                        </ScrollList>
                     </TabContent>
                     <TabContent value="files">
                         {formattedResults?.everything}
@@ -382,8 +378,8 @@ const ResultsContainer = () => {
                         <CalculatorResult />
                     </TabContent>
                 </Tabs>
-            </Panel>
-        </ContextMenuProvider>
+            </ContextMenuProvider>
+        </Panel>
     )
 }
 

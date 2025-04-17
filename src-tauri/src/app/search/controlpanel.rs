@@ -1,8 +1,8 @@
+use crate::app::types::search::ControlPanelResult;
+use everything_sdk::EverythingError;
 use phf::phf_map;
 use phf::phf_set;
 use std::collections::HashMap;
-use everything_sdk::EverythingError;
-use crate::app::types::search::ControlPanelResult;
 
 // This is a map of search terms to the corresponding control panel settings.
 static SETTINGS: phf::Map<&'static str, &'static str> = phf_map! {

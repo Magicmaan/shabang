@@ -2,19 +2,17 @@ mod app;
 
 use std::sync::{Arc, Mutex};
 use std::{thread, time};
-use tauri::Manager;
+use tauri::{App, Manager};
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-use tauri::{AppHandle, Emitter};
-use tauri_plugin_global_shortcut::{Code, Modifiers, Shortcut, ShortcutState};
-use tauri_plugin_positioner::*;
-use tauri_plugin_fs::*;
-use app::api::javascript::{
-    close_window, get_blur, open_link, open_window, search, set_blur,
-};
+use app::api::javascript::{close_window, get_blur, open_link, open_window, search, set_blur};
 use app::setup::check_install;
 use app::shortcut::make_shortcut;
 use elevated_command::Command;
 use std::process::Command as StdCommand;
+use tauri::{AppHandle, Emitter};
+use tauri_plugin_fs::*;
+use tauri_plugin_global_shortcut::{Code, Modifiers, Shortcut, ShortcutState};
+use tauri_plugin_positioner::*;
 use window_vibrancy::{apply_blur, apply_vibrancy, NSVisualEffectMaterial};
 
 // Define BlurStyle type
@@ -50,11 +48,44 @@ fn start_everything() {
     println!("Everything started");
 }
 
+fn get_windows_recent(app: &mut App) {
+    use std::fs;
+    use std::io::Write;
+    use std::path::PathBuf; 
 
+
+    use tauri::path::PathResolver;
+    use tauri::Runtime;
+
+
+    let path_resolver = app.path();
+
+    let app_data_path = path_resolver
+        .app_data_dir()
+        .expect("Failed to get app data directory");
+    println!("App data path: {:?}", app_data_path);
+    let recent_path = app_data_path.join("Microsoft").join("Windows").join("Recent Items");
+
+    println!("Recent path: {:?}", recent_path);
+
+    let entries = fs::read_dir(recent_path).unwrap();
+
+    for entry in entries {
+        println!("Name: {}", entry.unwrap().path().display());
+    }
+    
+
+    
+
+    
+
+
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_positioner::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_log::Builder::new().build())
@@ -68,15 +99,14 @@ pub fn run() {
                     Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState,
                 };
 
+                
 
-
-             
                 tauri::tray::TrayIconBuilder::new()
                     .on_tray_icon_event(|tray_handle, event| {
                         tauri_plugin_positioner::on_tray_event(tray_handle.app_handle(), &event);
                     })
-                      .build(app)?;
-             
+                    .build(app)?;
+
                 let window = app.get_webview_window("main").unwrap();
 
                 //setup app
@@ -88,6 +118,8 @@ pub fn run() {
                 //create state
                 app.manage(Mutex::new(AppState::default()));
 
+
+               
                 //to use:
                 // let state = app.state::<Mutex<AppState>>();
                 // let mut state = state.lock().unwrap();
@@ -115,6 +147,10 @@ pub fn run() {
                     }
                 }
 
+                // window files stuff
+                get_windows_recent(app);
+
+                // create open link shortcut
                 let tray = TrayIconBuilder::new()
                     .icon(app.default_window_icon().unwrap().clone())
                     .build(app)?;

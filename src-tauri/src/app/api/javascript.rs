@@ -1,9 +1,9 @@
+use crate::app::search;
 use serde::{Deserialize, Serialize};
 use serde_json::Number;
 use std::sync::Arc;
 use std::{thread, time};
 use tauri::{Manager, State};
-use crate::app::search;
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 use crate::app::types::search::{searchResult, AppResult, ControlPanelResult, EverythingResult};
 use crate::{app, AppState, BlurStyle};
@@ -21,8 +21,6 @@ use tauri_plugin_opener::OpenerExt;
 use window_vibrancy::{
     apply_acrylic, apply_blur, apply_vibrancy, clear_acrylic, clear_blur, NSVisualEffectMaterial,
 };
-
-
 
 // Open Close window
 #[tauri::command]
@@ -62,8 +60,6 @@ pub fn close_window(webview_window: tauri::WebviewWindow, app_handle: tauri::App
         app_handle.emit("close_window_transition_done", "").unwrap();
     });
 }
-
-
 
 #[tauri::command]
 pub fn set_blur(
@@ -125,56 +121,79 @@ pub fn get_blur(state: State<'_, Mutex<AppState>>) -> bool {
 }
 
 #[tauri::command]
-pub fn open_link(link: &str, app_handle: tauri::AppHandle) {
+pub fn open_link(link: &str, mode: &str, app_handle: tauri::AppHandle) {
     println!("open_link_js: {}", link);
-    let _ = app_handle.opener().open_path(link, None::<&str>);
+    // very basic check for link
+    match mode {
+        "default" => {
+            let _ = app_handle.opener().open_path(link, Some("explorer"));
+        }
+        "explorer" => {
+            let _ = app_handle.opener().open_path(link, Some("explorer"));
+        }
+        "default_program" => {
+            let _ = app_handle.opener().open_path(link, None::<&str>);
+        }
+        "web" => {
+            use webbrowser;
+            if (link.starts_with("http://") || link.starts_with("https://")) {
+                let _ = app_handle.opener().open_url(link, None::<&str>);
+            } else {
+                eprintln!("Invalid web link: {}", link);
+            }
+        }
+        "terminal" => {
+            let _ = app_handle.opener().open_path(link, Some("cmd"));
+        }
+        "powershell" => {
+            let _ = app_handle.opener().open_path(link, Some("powershell"));
+        }
+        _ => {
+            eprintln!("Invalid mode: {}", mode);
+        }
+    }
 }
-
-
 
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase", tag = "event", content = "data")]
 pub enum SearchEvent<'a> {
     #[serde(rename_all = "camelCase")]
-  Started {
-    query: &'a str,
-    start_time: Number,
-  },
-  #[serde(rename_all = "camelCase")]
-  Progress {
-    time: Number,
-    query: &'a str,
-    search_type: &'a str,
-  },
+    Started { query: &'a str, start_time: Number },
+    #[serde(rename_all = "camelCase")]
+    Progress {
+        time: Number,
+        query: &'a str,
+        search_type: &'a str,
+    },
 
     #[serde(rename_all = "camelCase")]
-  EverythingResult {
-    start_time: Number,
-    time: Number,
-    query: &'a str,
-    data: Vec<EverythingResult>,
-  },
-  #[serde(rename_all = "camelCase")]
-  ApplicationResult {
-    start_time: Number,
-    time: Number,
-    query: &'a str,
-    data: Vec<AppResult>,
-  },
-  #[serde(rename_all = "camelCase")]
-  ControlPanelResult {
-    start_time: Number,
-    time: Number,
-    query: &'a str,
-    data: Vec<ControlPanelResult>,
-  },
+    EverythingResult {
+        start_time: Number,
+        time: Number,
+        query: &'a str,
+        data: Vec<EverythingResult>,
+    },
+    #[serde(rename_all = "camelCase")]
+    ApplicationResult {
+        start_time: Number,
+        time: Number,
+        query: &'a str,
+        data: Vec<AppResult>,
+    },
+    #[serde(rename_all = "camelCase")]
+    ControlPanelResult {
+        start_time: Number,
+        time: Number,
+        query: &'a str,
+        data: Vec<ControlPanelResult>,
+    },
 
-  #[serde(rename_all = "camelCase")]
-  Finished {
-    start_time: Number,
-    time: Number,
-    data: searchResult,
-  },
+    #[serde(rename_all = "camelCase")]
+    Finished {
+        start_time: Number,
+        time: Number,
+        data: searchResult,
+    },
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -184,21 +203,25 @@ pub struct SearchOptions {
     pub application: bool,
 }
 
-
 // the programs main search function
 #[tauri::command]
-pub async fn search<'a>(query: String, search_options: Option<SearchOptions>, 
-    app: AppHandle, on_event: Channel<SearchEvent<'a>>) -> Result<searchResult, String> {
+pub async fn search<'a>(
+    query: String,
+    search_options: Option<SearchOptions>,
+    app: AppHandle,
+    on_event: Channel<SearchEvent<'a>>,
+) -> Result<searchResult, String> {
     let start_time = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap()
         .as_secs();
-    
-    on_event.send(SearchEvent::Started {
-        query: &query,
-        start_time: Number::from(start_time),
-    }).unwrap();
 
+    on_event
+        .send(SearchEvent::Started {
+            query: &query,
+            start_time: Number::from(start_time),
+        })
+        .unwrap();
 
     // get control panel settings results
     let controlpanel_result = match controlpanel::search(query.clone()) {
@@ -207,14 +230,16 @@ pub async fn search<'a>(query: String, search_options: Option<SearchOptions>,
                 .duration_since(UNIX_EPOCH)
                 .unwrap()
                 .as_secs();
-            on_event.send(SearchEvent::ControlPanelResult {
-                start_time: Number::from(start_time),
-                time: Number::from(time),
-                query: &query,
-                data: res.clone(),
-            }).unwrap();
+            on_event
+                .send(SearchEvent::ControlPanelResult {
+                    start_time: Number::from(start_time),
+                    time: Number::from(time),
+                    query: &query,
+                    data: res.clone(),
+                })
+                .unwrap();
             res
-        },
+        }
         Err(e) => return Err(e.to_string()),
     };
 
@@ -225,48 +250,55 @@ pub async fn search<'a>(query: String, search_options: Option<SearchOptions>,
                 .duration_since(UNIX_EPOCH)
                 .unwrap()
                 .as_secs();
-            on_event.send(SearchEvent::ApplicationResult {
-                start_time: Number::from(start_time),
-                time: Number::from(time),
-                query: &query,
-                data: res.clone(),
-            }).unwrap();
+            on_event
+                .send(SearchEvent::ApplicationResult {
+                    start_time: Number::from(start_time),
+                    time: Number::from(time),
+                    query: &query,
+                    data: res.clone(),
+                })
+                .unwrap();
             res
-        },
+        }
         Err(e) => return Err(e.to_string()),
     };
 
     // get everything results
     let everything_result = match everything::search(query.clone()) {
-            Ok(res) => {
-                let time = SystemTime::now()
-                    .duration_since(UNIX_EPOCH)
-                    .unwrap()
-                    .as_secs();
-                on_event.send(SearchEvent::EverythingResult {
+        Ok(res) => {
+            let time = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_secs();
+            on_event
+                .send(SearchEvent::EverythingResult {
                     start_time: Number::from(start_time),
                     time: Number::from(time),
                     query: &query,
                     data: res.clone(),
-                }).unwrap();
-                res
-            },
-            Err(e) => return Err(e.to_string()),
-        };
-    
+                })
+                .unwrap();
+            res
+        }
+        Err(e) => return Err(e.to_string()),
+    };
 
-    on_event.send(SearchEvent::Finished {
-        start_time: Number::from(start_time),
-        time: Number::from(SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_secs()),
-        data: searchResult {
-            everything: everything_result.clone(),
-            controlpanel: controlpanel_result.clone(),
-            application: app_result.clone(),
-        },
-    }).unwrap();
+    on_event
+        .send(SearchEvent::Finished {
+            start_time: Number::from(start_time),
+            time: Number::from(
+                SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs(),
+            ),
+            data: searchResult {
+                everything: everything_result.clone(),
+                controlpanel: controlpanel_result.clone(),
+                application: app_result.clone(),
+            },
+        })
+        .unwrap();
     Ok(searchResult {
         everything: everything_result,
         controlpanel: controlpanel_result,

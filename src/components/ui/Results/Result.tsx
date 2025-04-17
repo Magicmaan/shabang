@@ -39,6 +39,10 @@ import { cva } from 'class-variance-authority'
 import { readFile, BaseDirectory } from '@tauri-apps/plugin-fs'
 import * as path from '@tauri-apps/api/path'
 
+import { Menu, Item, Separator, Submenu, useContextMenu } from 'react-contexify'
+import 'react-contexify/ReactContexify.css'
+import { Popover } from '../base/popover'
+
 const ResultStyles = cva(
     `group flex w-full flex-row overflow-hidden rounded-md  transition-all duration-300 hover:cursor-pointer
     `,
@@ -130,16 +134,43 @@ const Result = ({
 }: ResultProps) => {
     if (!Icon) Icon = fileIcons.default
 
+    const MENU_ID = `RESULT_${index}_CONTEXT_MENU`
+    const { show } = useContextMenu({
+        id: MENU_ID,
+    })
+    function handleContextMenu(event) {
+        show({
+            event,
+            props: {
+                key: 'value',
+            },
+        })
+    }
+    const handleItemClick = ({ id, event, props }) => {
+        switch (id) {
+            case 'copy':
+                console.log(event, props)
+                break
+            case 'cut':
+                console.log(event, props)
+                break
+            //etc...
+        }
+    }
+
     return (
         <>
             <div
                 index={index}
+                data-index={index}
                 aria-selected={selected === index}
+                data-selected={selected === index}
                 data-type={type}
                 // prettier-ignore
                 className={cn(
                     ResultStyles(),className
                         )}
+                onContextMenu={handleContextMenu}
             >
                 <div
                     aria-selected={Math.floor(selected || 1) === index}
@@ -148,7 +179,10 @@ const Result = ({
                     onPointerDown={(e) => {
                         if (!data?.path) return
                         if (e.button !== 0) return
-                        open(data?.path)
+                        open({
+                            path: data.path,
+                            mode: 'explorer',
+                        })
                         e.currentTarget.focus()
                     }}
                 >
@@ -195,6 +229,26 @@ const Result = ({
                 <div className="flex h-full w-0 flex-col border-white/10 bg-black/5 transition-all delay-300 duration-200 group-hover:w-14 group-hover:border-l-2 dark:border-white/50 dark:bg-white/5">
                     + -
                 </div>
+
+                <Menu id={MENU_ID}>
+                    <Item id="copy" onClick={handleItemClick}>
+                        Copy
+                    </Item>
+                    <Item id="cut" onClick={handleItemClick}>
+                        Cut
+                    </Item>
+                    <Separator />
+                    <Item disabled>Disabled</Item>
+                    <Separator />
+                    <Submenu label="Foobar">
+                        <Item id="reload" onClick={handleItemClick}>
+                            Reload
+                        </Item>
+                        <Item id="something" onClick={handleItemClick}>
+                            Do something else
+                        </Item>
+                    </Submenu>
+                </Menu>
             </div>
             <div className="fade-x mx-auto h-0.5 w-9/10 bg-black/10 dark:bg-black/20" />
         </>

@@ -2,6 +2,7 @@ import { debug } from '@tauri-apps/plugin-log'
 import * as radixTabs from '@radix-ui/react-tabs'
 import { useScroll } from 'react-use'
 import { useEffect, useInsertionEffect, useLayoutEffect, useRef } from 'react'
+import { cn } from '@/lib/utils'
 const Tabs: React.FC<{
     defaultValue: string
     children: React.ReactNode
@@ -62,7 +63,10 @@ const TabContent: React.FC<{
     return (
         <radixTabs.Content
             value={value}
-            className={`bg-primary scrollbar fade-bottom h-full w-full overflow-scroll overflow-x-hidden p-0.5`}
+            className={cn(
+                `bg-primary fade-bottom relative h-full w-full overflow-hidden overflow-x-hidden p-0.5`,
+                className
+            )}
         >
             {children}
         </radixTabs.Content>

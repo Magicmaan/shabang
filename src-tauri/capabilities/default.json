@@ -24,6 +24,8 @@
         "fs:allow-app-read",
         "fs:allow-picture-read",
         "fs:allow-picture-meta",
-        "fs:allow-picture-read-recursive"
+        "fs:allow-picture-read-recursive",
+        "process:allow-exit",
+        "process:allow-restart"
     ]
 }
