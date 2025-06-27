@@ -145,85 +145,94 @@ export const createSearchSlice: StateCreator<
                     searchQuery: query,
                 },
             }))
-
-            // console.log('Searching for ' + query + ' with type ' + searchType)
-
             set((state) => ({
                 search: {
                     ...state.search,
                     searchType,
                 },
             }))
-            search({
-                query,
-                onStart: (event) => {
-                    const curQ = get().search.searchQuery
-                    console.log('searching ', event.data.query)
-                    console.log('current query is', curQ)
-                    set((state) => ({
-                        search: {
-                            ...state.search,
-                            isSearching: true,
-                        },
-                    }))
-                },
-                onEverythingResult: (event) => {
-                    // debug('Got everything results')
-                    // console.log(event)
-
-                    // add result
-                    results.everything = event.data.data
-                    set((state) => ({
-                        search: {
-                            ...state.search,
-                            searchResults: {
-                                ...state.search.searchResults,
-                                everything: event.data.data,
+            try {
+                const res = await search({
+                    query,
+                    onStart: (event) => {
+                        console.log('🟢 onStart callback fired:', event)
+                        const curQ = get().search.searchQuery
+                        console.log('searching ', event.data.query)
+                        console.log('current query is', curQ)
+                        set((state) => ({
+                            search: {
+                                ...state.search,
+                                isSearching: true,
                             },
-                        },
-                    }))
-                },
-                onAppResult: (event) => {
-                    // debug('Got application results')
-                    // console.log(event)
+                        }))
+                    },
+                    onEverythingResult: (event) => {
+                        console.log(
+                            '🟢 onEverythingResult callback fired:',
+                            event
+                        )
 
-                    results.application = event.data.data
-                    set((state) => ({
-                        search: {
-                            ...state.search,
-                            searchResults: {
-                                ...state.search.searchResults,
-                                application: event.data.data,
+                        // add result
+                        results.everything = event.data.data
+                        set((state) => ({
+                            search: {
+                                ...state.search,
+                                searchResults: {
+                                    ...state.search.searchResults,
+                                    everything: event.data.data,
+                                },
                             },
-                        },
-                    }))
-                },
-                onControlPanelResult: (event) => {
-                    // debug('Got control panel results')
-                    // console.log(event)
+                        }))
+                    },
+                    onAppResult: (event) => {
+                        console.log('🟢 onAppResult callback fired:', event)
 
-                    results.controlpanel = event.data.data
-                    set((state) => ({
-                        search: {
-                            ...state.search,
-                            searchResults: {
-                                ...state.search.searchResults,
-                                controlpanel: event.data.data,
+                        results.application = event.data.data
+                        set((state) => ({
+                            search: {
+                                ...state.search,
+                                searchResults: {
+                                    ...state.search.searchResults,
+                                    application: event.data.data,
+                                },
                             },
-                        },
-                    }))
-                },
-                onFinished: (event) => {
-                    // debug('Finished searching')
+                        }))
+                    },
+                    onControlPanelResult: (event) => {
+                        console.log(
+                            '🟢 onControlPanelResult callback fired:',
+                            event
+                        )
 
-                    set((state) => ({
-                        search: {
-                            ...state.search,
-                            isSearching: false,
-                        },
-                    }))
-                },
-            }).catch((e: EverythingError) => {
+                        results.controlpanel = event.data.data
+                        set((state) => ({
+                            search: {
+                                ...state.search,
+                                searchResults: {
+                                    ...state.search.searchResults,
+                                    controlpanel: event.data.data,
+                                },
+                            },
+                        }))
+                    },
+                    onFinished: (event) => {
+                        console.log('🟢 onFinished callback fired:', event)
+
+                        set((state) => ({
+                            search: {
+                                ...state.search,
+                                isSearching: false,
+                            },
+                        }))
+                    },
+                })
+                console.log('✅ Search function completed, result:', res)
+
+                if (!res) {
+                    throw new EverythingError('No results.', 'No results found')
+                }
+                return res
+            } catch (e: any) {
                 console.error('Error searching', e)
 
                 set((state) => ({
@@ -231,11 +240,10 @@ export const createSearchSlice: StateCreator<
                         ...state.search,
                         isSearching: false,
                         searchType: searchTypes.error,
-                        // searchResults: e,
                     },
                 }))
-            })
-            return results
+                throw e
+            }
         },
         addToHistory: (query: string, searchType: searchTypes) => {
             // set((state) => ({

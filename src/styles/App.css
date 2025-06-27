@@ -1,12 +1,5 @@
 @import 'tailwindcss';
 @custom-variant dark (&:where(.dark, .dark *));
-.logo.vite:hover {
-    filter: drop-shadow(0 0 2em #747bff);
-}
-
-.logo.react:hover {
-    filter: drop-shadow(0 0 2em #61dafb);
-}
 :root {
     font-synthesis: none;
     text-rendering: optimizeLegibility;
@@ -14,49 +7,20 @@
     -moz-osx-font-smoothing: grayscale;
     -webkit-text-size-adjust: 100%;
 }
-p::selection {
-    border-radius: 5rem;
-}
-
-input::selection {
-    border-radius: 5rem;
-    filter: blur(5px);
-}
 
 body,
-html,
-#root {
+html {
     background-color: transparent !important;
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     overflow: hidden;
 }
 
-.container {
-    margin: 0;
-    padding-top: 10vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    text-align: center;
-    background-color: transparent;
+#root {
+    width: 100%;
+    height: 100%;
+    /* background: red; */
 }
-
-.logo {
-    height: 6em;
-    padding: 1.5em;
-    will-change: filter;
-    transition: 0.75s;
-}
-
-.logo.tauri:hover {
-    filter: drop-shadow(0 0 2em #24c8db);
-}
-
-.center {
-    @apply flex items-center justify-center;
-}
-
 .row {
     display: flex;
     justify-content: center;
@@ -165,4 +129,42 @@ kbd {
 
 .result {
     @apply flex h-14 w-full flex-row overflow-hidden rounded-md bg-black/10 transition-all duration-300 hover:cursor-pointer;
+}
+
+.root-layout {
+    display: grid;
+    grid-template-areas:
+        'left search search right'
+        'left results results right'
+        'left results results right';
+    grid-template-columns: 0.5fr 1fr 1fr 0.5fr;
+    grid-template-rows: 3rem 48rem 3fr;
+    width: 64rem;
+    height: auto;
+    background: red;
+    gap: var(--layout-gap, 0rem);
+    padding: 0.25rem;
+}
+
+.layout-no-gap {
+    --layout-gap: 0px;
+}
+
+.layout-gap {
+    --layout-gap: 0.5rem;
+}
+
+.seperator-b {
+    border-bottom: 2px solid var(--color-seperator);
+}
+.seperator-t {
+    border-top: 2px solid var(--color-seperator);
+}
+.seperator-muted {
+    border-color: 2px solid var(--color-seperator);
+}
+
+.border {
+    border: 2px solid var(--color-border);
+    border-top-color: var(--color-highlight);
 }

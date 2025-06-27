@@ -148,7 +148,7 @@ pub fn run() {
                 }
 
                 // window files stuff
-                get_windows_recent(app);
+                // get_windows_recent(app);
 
                 // create open link shortcut
                 let tray = TrayIconBuilder::new()

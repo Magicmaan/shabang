@@ -3,6 +3,8 @@ import Widget from './base/Widget'
 import QuickWidgets from './QuickWidgets'
 import ResultsContainer from './Results'
 import SearchBar from './SearchBar'
+import SettingBar from './SettingBar'
+import ResultsLayout from './Results/ResultsLayout'
 
 const LayoutStyle = cva(
     'pointer-events-none flex h-full w-full origin-top flex-row items-stretch justify-center gap-2.5',
@@ -39,18 +41,15 @@ const Layout = ({
     searchBarVariant,
 }: LayoutProps) => {
     return (
-        <div className="pointer-events-none flex h-full w-full origin-top flex-row items-stretch justify-center gap-2.5">
-            <div className="flex h-full w-1/3 items-start justify-end">
-                <div className="flex h-full w-auto flex-col items-center justify-between gap-2.5">
-                    <QuickWidgets />
-                </div>
-            </div>
-            <div className="pointer-events-auto flex h-max w-1/3 min-w-[36rem] flex-col items-stretch justify-stretch">
-                <SearchBar />
-                <ResultsContainer />
-            </div>
+        <div className="root-layout group/layout layout-gap">
+            {/* Left column */}
 
-            <div className="h-full w-1/3">g</div>
+            <QuickWidgets />
+
+            {/* Middle column */}
+
+            <SearchBar className="group/layout radius group-[.layout-gap]/layout:drop-shadow group-[.layout-no-gap]/layout:rounded-b-none" />
+            <ResultsLayout />
         </div>
     )
 }

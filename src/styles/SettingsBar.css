@@ -1,0 +1,4 @@
+@import 'tailwindcss';
+.settings-bar-container {
+    background-color: var(--color-background-light);
+}

@@ -9,6 +9,7 @@ import {
 } from '@/types/searchEvent'
 import { EverythingError, searchResults } from '@/types/searchTypes'
 import { Channel, invoke, SERIALIZE_TO_IPC_FN } from '@tauri-apps/api/core'
+import { listen } from '@tauri-apps/api/event'
 
 interface SearchProps {
     query: string
@@ -30,21 +31,25 @@ async function search({
     onProgress,
 }: SearchProps): Promise<searchResults> {
     const SEARCH_CHANNEL = new Channel<SearchEvent>()
-
+    console.log('Creating search channel', SEARCH_CHANNEL)
+    console.log('Setting up channel onmessage handler')
     SEARCH_CHANNEL.onmessage = (message) => {
-        console.log(`got download event ${message.event}`)
         switch (message.event) {
             case 'started':
+                console.log('Search started: ', message)
                 onStart && onStart(message as StartedEvent)
                 break
             case 'everythingResult':
+                console.log('Everything result received:', message)
                 onEverythingResult &&
                     onEverythingResult(message as EverythingResultEvent)
                 break
             case 'applicationResult':
+                console.log('Application result received:', message)
                 onAppResult && onAppResult(message as ApplicationResultEvent)
                 break
             case 'controlPanelResult':
+                console.log('Control panel result received:', message)
                 onControlPanelResult &&
                     onControlPanelResult(message as ControlPanelResultEvent)
                 break
@@ -53,6 +58,7 @@ async function search({
                 onProgress && onProgress(message as ProgressEvent)
                 break
             case 'finished':
+                console.log('Finished: ', message)
                 onFinished && onFinished(message as FinishedEvent)
                 break
             default:
@@ -60,23 +66,24 @@ async function search({
                 break
         }
     }
-    const results = invoke('search', {
+
+    console.log('About to invoke search command')
+    const results = invoke<searchResults>('search', {
         query,
-        search_options: {
+        searchOptions: {
             everything: true,
-            applications: true,
-            controlPanel: true,
+            controlpanel: true,
+            application: true,
         },
         onEvent: SEARCH_CHANNEL,
-    }).then((res) => {
-        if (!res) {
-            throw new EverythingError('No results.', 'No results found')
-        }
-        return res as searchResults
     })
+
+    console.log('Search command completed, results:', results)
+
     if (!results) {
         throw new EverythingError('No results.', 'No results found')
     }
+
     return results
 }
 

@@ -1,0 +1,59 @@
+.react-aria-Tabs {
+    grid-area: results;
+    display: flex;
+    flex-direction: column;
+    color: var(--text-color);
+    background: var(--background-gradient);
+    flex-direction: column;
+}
+
+.react-aria-TabList {
+    display: flex;
+    /* font-weight: 575; */
+    gap: 0.25rem;
+}
+
+.react-aria-Tab {
+    padding: 5px;
+    /* background: red; */
+    cursor: default;
+    outline: none;
+    position: relative;
+    color: var(--color-text);
+    transition: color 500ms;
+    forced-color-adjust: none;
+    &[data-hovered],
+    &[data-focused] {
+        color: var(--color-text-title);
+    }
+
+    &[data-selected] {
+        color: var(--color-text-title);
+    }
+
+    &[data-disabled] {
+        color: var(--color-text-muted);
+        /* &[data-selected] {
+            --border-color: var(--text-color-disabled);
+        } */
+    }
+
+    &[data-focus-visible]:after {
+        content: '';
+        position: absolute;
+        inset: 4px;
+        border-radius: 4px;
+        border: 2px solid var(--focus-ring-color);
+    }
+}
+
+.react-aria-TabPanel {
+    margin-top: 4px;
+    padding: 10px;
+    border-radius: 4px;
+    outline: none;
+
+    &[data-focus-visible] {
+        outline: 2px solid var(--focus-ring-color);
+    }
+}

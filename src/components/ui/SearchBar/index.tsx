@@ -18,6 +18,17 @@ import { useAppStore } from '@/hooks/useApp.tsx'
 import { useDebounce, useThrottle, useTimeout } from 'react-use'
 import { cva } from 'class-variance-authority'
 import { cn } from '@/lib/utils.ts'
+import {
+    SearchField,
+    Label,
+    Input,
+    Button,
+    TagGroup,
+    TagList,
+    Tag,
+} from 'react-aria-components'
+import '../../../styles/SearchBar.css'
+import Tags from '../base/Tags.tsx'
 
 const SearchBarStyles = cva('h-12 border-2', {
     variants: {
@@ -47,9 +58,10 @@ interface SearchBarProps {
     borderBottom?: boolean
     borderTop?: boolean
     variant?: 'default' | 'small' | 'large'
+    className?: string
 }
 
-const SearchBar = ({ borderTop, borderBottom }: SearchBarProps) => {
+const SearchBar = ({ className }: SearchBarProps) => {
     const { windowOpenState } = useOpenWindow()
     const [isSearching, setIsSearching] = useState(false)
     const [debounceSearch, setDebounceSearch] = useState(false)
@@ -136,6 +148,8 @@ const SearchBar = ({ borderTop, borderBottom }: SearchBarProps) => {
     const overrideCtrlF = (event: KeyboardEvent) => {
         if (event.key === 'f' && event.ctrlKey) {
             inputRef.current?.focus()
+            event.preventDefault()
+            event.stopPropagation()
         }
     }
 
@@ -147,6 +161,8 @@ const SearchBar = ({ borderTop, borderBottom }: SearchBarProps) => {
         ) {
             setIsSearching(true)
             dispatchSearch(searchQuery)
+            event.preventDefault()
+            event.stopPropagation()
         }
     }
 
@@ -219,67 +235,21 @@ const SearchBar = ({ borderTop, borderBottom }: SearchBarProps) => {
         // handleSearchTimeout()
     }, [searchQuery])
 
-    const onBlur = useCallback(() => {
-        addToHistory(searchQuery, searchType)
-
-        setIsSearching(false)
-    }, [])
-
-    const onFocus = useCallback(() => {
-        setIsSearching(true)
-        setTimeout(() => {
-            setIsSearching(false)
-        }, 500)
-        inputRef.current?.select()
-    }, [])
-
-    const onSelection = useCallback((e: React.FocusEvent<HTMLInputElement>) => {
-        if (!doUpdateSearchHighlightRange.current) {
-            doUpdateSearchHighlightRange.current = true
-            e.currentTarget.setSelectionRange(
-                searchHighlightRange.current[0],
-                searchHighlightRange.current[1]
-            )
-            return
-        }
-        searchHighlightRange.current = [
-            e.currentTarget.selectionStart || 0,
-            e.currentTarget.selectionEnd || 0,
-        ]
-    }, [])
-
     return (
-        <Panel
-            className={cn(
-                SearchBarStyles({
-                    variant: 'default',
-                    borderTop: borderTop,
-                    borderBottom: borderBottom,
-                }),
-                `${isSearching ? 'rainbow-border' : ''} `
-            )}
-            data-searching={isSearching}
-        >
-            <div className="absolute top-0 left-0 -z-10 flex h-full w-full items-center p-2">
-                <p className="text-secondary px-1 whitespace-nowrap">
-                    {fillText}
-                </p>
-            </div>
-            <input
-                name="search"
-                ref={inputRef}
-                id={'search-input'}
-                className="text-text w-full rounded-lg border-0 bg-transparent p-2 outline-0" // Ensure Tailwind CSS classes are applied
-                type="search"
-                value={searchQuery}
-                onChange={onChange}
-                onKeyDown={onKeyDown}
-                onBlur={onBlur}
-                onFocus={onFocus}
-                onSelect={onSelection}
-                autoComplete="off"
-            />
-        </Panel>
+        <div className={cn('search-field-container border', className)}>
+            <SearchField aria-label="Search" className={'aria-search-field'}>
+                <Tags />
+                <Input
+                    ref={inputRef}
+                    placeholder={fillText}
+                    value={searchQuery}
+                    onChange={onChange}
+                    onKeyDown={onKeyDown}
+                />
+
+                <Button>✕</Button>
+            </SearchField>
+        </div>
     )
 }
 

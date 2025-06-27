@@ -222,7 +222,8 @@ pub async fn search<'a>(
             start_time: Number::from(start_time),
         })
         .unwrap();
-
+    
+   
     // get control panel settings results
     let controlpanel_result = match controlpanel::search(query.clone()) {
         Ok(res) => {

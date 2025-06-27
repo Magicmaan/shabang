@@ -9,7 +9,7 @@ pub struct Shortcuts {
 impl Shortcuts {
     pub fn new() -> Self {
         Self {
-            toggle_window: Shortcut::new(Some(Modifiers::SUPER | Modifiers::SHIFT), Code::KeyR)
+            toggle_window: Shortcut::new(Some(Modifiers::SUPER | Modifiers::SHIFT), Code::KeyA)
                 .to_string(),
             // Initialize more shortcuts as needed
         }
