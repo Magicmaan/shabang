@@ -1,19 +1,11 @@
 import '../../../styles/Theme.css'
 import '../../../input.css'
-import Panel from '../base/Panel.tsx'
+
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { debug } from '@tauri-apps/plugin-log'
 import { useOpenWindow } from '../../../hooks/useOpenWindow.tsx'
-import { useSpecialCharacters } from './SpecialCharacters.tsx'
-import { createSearchSlice } from '../../../hooks/search/useSearch.tsx'
-import {
-    ApplicationData,
-    ControlPanelData,
-    EverythingError,
-    EverythingData,
-    searchResults,
-    searchTypes,
-} from '@/types/searchTypes'
+
+import { searchResults } from '@/types/searchTypes'
 import { useAppStore } from '@/hooks/useApp.tsx'
 import { useDebounce, useThrottle, useTimeout } from 'react-use'
 import { cva } from 'class-variance-authority'
@@ -62,6 +54,12 @@ interface SearchBarProps {
 }
 
 const SearchBar = ({ className }: SearchBarProps) => {
+    //TODO:
+    // - add a search history
+    // - add a search type selector
+    //   display search tags properly
+    // cleanup and seperate code
+
     const { windowOpenState } = useOpenWindow()
     const [isSearching, setIsSearching] = useState(false)
     const [debounceSearch, setDebounceSearch] = useState(false)
@@ -116,13 +114,6 @@ const SearchBar = ({ className }: SearchBarProps) => {
             }
         }
     }, [searchQuery, searchType, searchResults])
-
-    const specialCharacters = useSpecialCharacters({
-        searchQuery,
-        setSearchQuery,
-        searchHighlightRange,
-        doUpdateSearchHighlightRange,
-    })
 
     function dispatchSearch(query: string) {
         if (!debounceSearch) return
@@ -213,17 +204,6 @@ const SearchBar = ({ className }: SearchBarProps) => {
             if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                 e.preventDefault()
             }
-
-            if (e.key in specialCharacters) {
-                specialCharacters[e.key as keyof typeof specialCharacters]()
-                doUpdateSearchHighlightRange.current = false
-                inputRef.current?.setSelectionRange(
-                    searchHighlightRange.current[0],
-                    searchHighlightRange.current[1],
-                    'forward'
-                )
-                e.preventDefault()
-            }
         },
         [searchQuery, searchResults, storeQuery]
     )
@@ -236,19 +216,30 @@ const SearchBar = ({ className }: SearchBarProps) => {
     }, [searchQuery])
 
     return (
-        <div className={cn('search-field-container border', className)}>
-            <SearchField aria-label="Search" className={'aria-search-field'}>
-                <Tags />
-                <Input
-                    ref={inputRef}
-                    placeholder={fillText}
-                    value={searchQuery}
-                    onChange={onChange}
-                    onKeyDown={onKeyDown}
-                />
+        <div
+            className="flex w-full flex-row justify-between gap-2"
+            style={{ gridArea: 'search' }}
+        >
+            <div className={cn('search-field-container border', className)}>
+                <SearchField
+                    aria-label="Search"
+                    className={'aria-search-field'}
+                >
+                    <Tags />
+                    <Input
+                        ref={inputRef}
+                        placeholder={fillText}
+                        value={searchQuery}
+                        onChange={onChange}
+                        onKeyDown={onKeyDown}
+                    />
 
-                <Button>✕</Button>
-            </SearchField>
+                    <Button>✕</Button>
+                </SearchField>
+            </div>
+            <div className="bg-gradient aspect-square h-full rounded-full border">
+                <Button className="h-full w-full rounded-full"></Button>
+            </div>
         </div>
     )
 }

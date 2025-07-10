@@ -35,9 +35,9 @@ const ResultsLayout = () => {
         <SettingsProvider>
             <div
                 style={{ gridArea: 'results' }}
-                className="group/results-container radius flex h-auto flex-col items-stretch justify-stretch border bg-red-500 p-2"
+                className="group/results-container radius bg-gradient flex flex-col items-stretch justify-stretch border p-2"
             >
-                <SettingBar className="group/layout peer bg-gradient" />
+                <SettingBar className="group/layout peer" />
 
                 <ResultsContainer className="group/layout peer h-full" />
             </div>

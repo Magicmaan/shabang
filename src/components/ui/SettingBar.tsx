@@ -1,11 +1,8 @@
 import { Info, Settings2 } from 'lucide-react'
-import DropSelector from './base/DropSelector'
 import '../../styles/SettingsBar.css'
 import '../../styles/TagList.css'
 import { cn } from '@/lib/utils'
-import { useContext, useState } from 'react'
-import { SettingsContext, useSettings } from './Results/ResultsLayout'
-import { TagGroup, Label, TagList, Tag } from 'react-aria-components'
+import { useSettings } from './Results/ResultsLayout'
 import Tags from './base/Tags'
 
 const SettingBar = ({ className }: { className?: string }) => {
@@ -14,8 +11,8 @@ const SettingBar = ({ className }: { className?: string }) => {
     return (
         <div
             className={cn(
-                'settings-bar-container seperator-b transition-[height] duration-250 ease-linear',
-                ` ${isSettingsOpen ? 'h-12' : 'h-0'}`,
+                'settings-bar-container seperator-b transition-[height,opacity] duration-250 ease-linear',
+                ` ${isSettingsOpen ? 'h-10 opacity-100' : 'h-0 opacity-0'}`,
                 className
             )}
             id="settings-bar-container"

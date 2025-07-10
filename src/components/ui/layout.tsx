@@ -48,7 +48,7 @@ const Layout = ({
 
             {/* Middle column */}
 
-            <SearchBar className="group/layout radius group-[.layout-gap]/layout:drop-shadow group-[.layout-no-gap]/layout:rounded-b-none" />
+            <SearchBar className="group/layout rounded-full group-[.layout-no-gap]/layout:rounded-b-none" />
             <ResultsLayout />
         </div>
     )

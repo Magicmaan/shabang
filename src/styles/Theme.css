@@ -31,7 +31,7 @@
     --color-text-muted: hsl(0, 0%, 30%);
 
     /* properties */
-    --border-radius-md: 0.5rem;
+    --border-radius-md: 1rem;
     --layout-gap: 0.5rem;
     --box-shadow: 0px 5px 10px 10px hsla(0, 0%, 0%, 0.25);
     --background-gradient: linear-gradient(
@@ -275,11 +275,6 @@
     to {
         border-image-width: 2;
     }
-}
-
-.rainbow-border {
-    border-image: url(./RainbowBorder.svg) 30;
-    animation: fadeInBorder 0.5s cubic-bezier(0.32, 0, 0.67, 0);
 }
 
 .tab-break {

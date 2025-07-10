@@ -10,16 +10,7 @@ import {
     useRef,
     useState,
 } from 'react'
-import {
-    AppResult,
-    BangResult,
-    FileResult,
-    PlaceHolderResult,
-    ResultsError,
-    ResultsPlaceholder,
-    SettingResult,
-} from './Result'
-import { CalculatorResult } from './CalculatorResult'
+
 import SettingBar from '../SettingBar'
 // import {
 //     TabContent,
@@ -36,17 +27,10 @@ import {
     searchResults,
 } from '@/types/searchTypes'
 import { ChevronDown, ChevronUp, Frown, Info } from 'lucide-react'
-import { e } from 'mathjs'
-import { listen } from '@tauri-apps/api/event'
-import { ContextMenu, ContextMenuProvider } from './ContextMenu'
-import { useAppStore } from '@/hooks/useApp'
-import DropSelector from '../base/DropSelector'
-import Button from '../base/button'
-import Divider from '../base/divider'
-import '../../../styles/Results.css'
 
-import { gsap } from 'gsap'
-import ScrollList from '../base/ScrollList'
+import { useAppStore } from '@/hooks/useApp'
+
+import '../../../styles/Results.css'
 
 import { cva } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
@@ -155,10 +139,11 @@ const ResultsContainer = ({
                     content: (
                         <ListBox aria-label="File search results">
                             <ListBoxItem key="error-files">
-                                <ResultsError error={searchResult} />
+                                nothing G
                             </ListBoxItem>
                         </ListBox>
                     ),
+                    length: 0,
                 },
                 {
                     id: 2,
@@ -170,6 +155,7 @@ const ResultsContainer = ({
                             </ListBoxItem>
                         </ListBox>
                     ),
+                    length: 0,
                 },
                 {
                     id: 3,
@@ -181,6 +167,7 @@ const ResultsContainer = ({
                             </ListBoxItem>
                         </ListBox>
                     ),
+                    length: 0,
                 },
                 {
                     id: 4,
@@ -192,6 +179,7 @@ const ResultsContainer = ({
                             </ListBoxItem>
                         </ListBox>
                     ),
+                    length: 0,
                 },
             ]
         }
@@ -199,7 +187,6 @@ const ResultsContainer = ({
         // Process search results
         const processedTabs = Object.entries(searchResult).map(
             ([key, value], index) => {
-                console.log('key: ', key, 'value: ', value)
                 if (Array.isArray(value)) {
                     return {
                         id: index + 1,
@@ -214,6 +201,7 @@ const ResultsContainer = ({
                                 ))}
                             </ListBox>
                         ),
+                        length: value.length,
                     }
                 } else {
                     return {
@@ -226,6 +214,7 @@ const ResultsContainer = ({
                                 </ListBoxItem>
                             </ListBox>
                         ),
+                        length: 0,
                     }
                 }
             }
@@ -244,6 +233,7 @@ const ResultsContainer = ({
                             </ListBoxItem>
                         </ListBox>
                     ),
+                    length: 0,
                 }
             }
         )
@@ -254,50 +244,58 @@ const ResultsContainer = ({
 
     // const [isSettingsOpen, setIsSettingsOpen] = useState(false)
     return (
-        <>
-            <Tabs
-                onSelectionChange={throttled}
-                selectedKey={selectedKey}
-                className={cn(className, 'react-aria-Tabs')}
-            >
-                <div className="seperator-b flex justify-between">
-                    <TabList aria-label="Search Tabs" items={tabs}>
-                        {(item) => <Tab>{item.title}</Tab>}
-                    </TabList>
-                    <ToggleButton
-                        // aria-expanded={isSettingsOpen}
-                        // isSelected={isSettingsOpen}
-                        onChange={setIsSettingsOpen}
-                        aria-label={'Toggle settings bar'}
-                        id="options-button"
-                        className="relative left-0"
-                        aria-controls="settings-bar-container"
-                    >
-                        <ChevronDown
-                            className={`h-6 transition-[rotate] duration-250 ease-linear ${isSettingsOpen ? 'rotate-180' : ''}`}
-                        />
-                    </ToggleButton>
-                    <div
-                        id="tab-selector-indicator"
-                        className="pointer-events-none absolute z-10 flex h-full flex-col items-center justify-end p-1 py-1"
-                        style={{
-                            left: `${rect?.left}px`,
-                            width: `${rect?.width}px`,
-                            height: `${rect?.height}px`,
-                            top: `${rect?.top}px`,
-                            transition:
-                                'left 500ms cubic-bezier(.46,-0.25,0,1.24), width 100ms cubic-bezier(.46,-0.25,0,1.24)',
-                        }}
-                    >
-                        <div className="bg-accent relative top-1 h-[4px] w-[75%] rounded opacity-50" />
-                    </div>
+        <Tabs
+            onSelectionChange={throttled}
+            selectedKey={selectedKey}
+            className={cn(className, 'react-aria-Tabs')}
+        >
+            <div className="seperator-b flex justify-between">
+                <TabList aria-label="Search Tabs" items={tabs}>
+                    {(item) => (
+                        <Tab>
+                            {item.title}
+                            <div
+                                className="text-text-muted flex aspect-square h-full items-center justify-center rounded-full bg-black/10 p-1 text-xs shadow-black drop-shadow-2xl"
+                                title={`${item.length} results`}
+                            >
+                                {item.length}
+                            </div>
+                        </Tab>
+                    )}
+                </TabList>
+                <ToggleButton
+                    // aria-expanded={isSettingsOpen}
+                    // isSelected={isSettingsOpen}
+                    onChange={setIsSettingsOpen}
+                    aria-label={'Toggle settings bar'}
+                    id="options-button"
+                    className="relative left-0"
+                    aria-controls="settings-bar-container"
+                >
+                    <ChevronDown
+                        className={`h-6 transition-[rotate] duration-250 ease-linear ${isSettingsOpen ? 'rotate-180' : ''}`}
+                    />
+                </ToggleButton>
+                <div
+                    id="tab-selector-indicator"
+                    className="pointer-events-none absolute z-10 flex h-full flex-col items-center justify-end p-1 py-1"
+                    style={{
+                        left: `${rect?.left}px`,
+                        width: `${rect?.width}px`,
+                        height: `${rect?.height}px`,
+                        top: `${rect?.top}px`,
+                        transition:
+                            'left 500ms cubic-bezier(.46,-0.25,0,1.24), width 100ms cubic-bezier(.46,-0.25,0,1.24)',
+                    }}
+                >
+                    <div className="bg-accent relative top-1 h-[4px] w-[75%] rounded opacity-50" />
                 </div>
+            </div>
 
-                <Collection items={tabs}>
-                    {(item) => <TabPanel>{item.content}</TabPanel>}
-                </Collection>
-            </Tabs>
-        </>
+            <Collection items={tabs}>
+                {(item) => <TabPanel>{item.content}</TabPanel>}
+            </Collection>
+        </Tabs>
     )
 }
 

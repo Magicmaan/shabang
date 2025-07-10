@@ -1,3 +1,4 @@
+import { X } from 'lucide-react'
 import { TagGroup, TagList, Tag, Button } from 'react-aria-components'
 
 const Tags = () => {
@@ -11,7 +12,10 @@ const Tags = () => {
         >
             <TagList>
                 <Tag>
-                    Files <Button slot="remove">X</Button>
+                    Files{' '}
+                    <Button slot="remove">
+                        <X />
+                    </Button>
                 </Tag>
                 <Tag>Apps</Tag>
                 <Tag>Google</Tag>

@@ -138,7 +138,7 @@ kbd {
         'left results results right'
         'left results results right';
     grid-template-columns: 0.5fr 1fr 1fr 0.5fr;
-    grid-template-rows: 3rem 48rem 3fr;
+    grid-template-rows: 2.5rem auto 3fr;
     width: 64rem;
     height: auto;
     background: red;
@@ -155,16 +155,16 @@ kbd {
 }
 
 .seperator-b {
-    border-bottom: 2px solid var(--color-seperator);
+    border-bottom: 1px solid var(--color-seperator);
 }
 .seperator-t {
-    border-top: 2px solid var(--color-seperator);
+    border-top: 1cm solid var(--color-seperator);
 }
 .seperator-muted {
-    border-color: 2px solid var(--color-seperator);
+    border-color: 1px solid var(--color-seperator);
 }
 
 .border {
-    border: 2px solid var(--color-border);
+    border: 1px solid var(--color-border);
     border-top-color: var(--color-highlight);
 }

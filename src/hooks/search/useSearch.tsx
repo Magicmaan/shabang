@@ -52,6 +52,13 @@ export const createSearchSlice: StateCreator<
         searchHistory: [],
 
         search: async (_query: string) => {
+            //TODO
+            // validate query
+            // shabang stuff
+            // cleanup + seperate code
+            // add some kind of queue rate limiting system to make faster
+            //      i.e. if new query string comes in like <50ms after last search, then skip the last
+            //           search and use the new one. should prevent the everything lock stuff
             if (_query.trim() === '') {
                 set((state) => ({
                     ...state,
